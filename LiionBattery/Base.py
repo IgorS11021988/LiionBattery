@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import json as js
+import os
 
 from MathProtEnergyProc.DatasAugmentation import HStackMatrixRepeat
 from MathProtEnergyProc.IndexedNames import IndexedNamesFromIndexes
@@ -9,8 +10,12 @@ from LiionBattery.LiionBatteryDynamics.LiionBatteryDynamics import LiionBatteryD
 from LiionBattery.LiionBatteryDynamics.LiionBatteryValues import IntegrateAttributes, IndexesGraphics, LiionBatteryParametersSave
 
 #Функция запуска проекта
-def ExecuteProject(ProjectFileName,modelingDynamicIndicate):
+def ExecuteProject(ProjectFileName,#Имя файла проекта
+                   ProjectDir,#Директория проекта
+                   modelingDynamicIndicate#Индикатор моделируемой динамики
+                   ):
     #Открываем файл проекта
+    ProjectFileName = os.path.join(ProjectDir,ProjectFileName)#Формируем полное имя проекта
     with open(ProjectFileName, 'r') as ProjFileName:
         ProjectsAttributes = js.load(ProjFileName)
 
@@ -26,16 +31,18 @@ def ExecuteProject(ProjectFileName,modelingDynamicIndicate):
     #Метод интегрирования дифференциальных уравнений
     integrateMethod = ProjectsAttributes["integrateMethod"]
                                
-    #Имя файла
-    ParametersFileName = ProjectsAttributes["ParametersFileName"]#Файл csv параметров
-    CurrentAttributesFileName = ProjectsAttributes["CurrentAttributesFileName"]#Файл csv аттрибутов тока
-    AccumulatorAttributesFileName = ProjectsAttributes["AccumulatorAttributesFileName"]#Файл csv аттрибутов аккумулятора
-    IntegrateAttributesFileName = ProjectsAttributes["IntegrateAttributesFileName"]#Файл csv аттрибутов интегрирования
-    IndexesGraphicsFileName = ProjectsAttributes["IndexesGraphicsFileName"]#Файл csv индексов графиков, которые нужно построить
-    DynamicFileName = ProjectsAttributes["DynamicFileName"]#Файл csv динамики
+    #Считываем имена файлов и директорий
+    ParametersFileName = os.path.join(ProjectDir,ProjectsAttributes["ParametersFileName"])#Файл csv параметров
+    CurrentAttributesFileName = os.path.join(ProjectDir,ProjectsAttributes["CurrentAttributesFileName"])#Файл csv аттрибутов тока
+    AccumulatorAttributesFileName = os.path.join(ProjectDir,ProjectsAttributes["AccumulatorAttributesFileName"])#Файл csv аттрибутов аккумулятора
+    IntegrateAttributesFileName = os.path.join(ProjectDir,ProjectsAttributes["IntegrateAttributesFileName"])#Файл csv аттрибутов интегрирования
+    IndexesGraphicsFileName = os.path.join(ProjectDir,ProjectsAttributes["IndexesGraphicsFileName"])#Файл csv индексов графиков, которые нужно построить
+    DynamicFileName = os.path.join(ProjectDir,ProjectsAttributes["DynamicFileName"])#Файл csv 
+    GraphicFileDir = os.path.join(ProjectDir,ProjectsAttributes["GraphicFileDir"])#Директория файлов графиков
+
+    #Считываем разделителидинамики
     sep = ProjectsAttributes["sep"]#Разделитель csv
     dec = ProjectsAttributes["dec"]#Десятичный разделитель
-    GraphicFileDir = ProjectsAttributes["GraphicFileDir"]#Директория файлов графиков
 
     #Считываем файл аттрибутов тока
     currentAttributes = pd.read_csv(CurrentAttributesFileName,sep=sep,decimal=dec)

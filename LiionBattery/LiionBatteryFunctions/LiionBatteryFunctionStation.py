@@ -3,6 +3,8 @@ import numpy as np
 import LiionBattery.LiionBatteryFunctions.LiionBatteryFunctionsStation as lbfs
 from MathProtEnergyProc import NonEqSystemQ
 
+from MathProtEnergyProc.CorrecionModel import PosLinearFilter
+
 #Функция состояния для литий-ионного аккумулятора
 def LiionBatteryStateFunction(stateCoordinates,
                               reducedTemp,
@@ -135,6 +137,9 @@ def LiionBatteryStateFunction(stateCoordinates,
                                     betaRT3m,betaRT3n)
     
     #Главный блок кинетической матрицы по процессам
+    Rbinp = PosLinearFilter(Rbinp)
+    Rm = PosLinearFilter(Rm)
+    Rbinn = PosLinearFilter(Rbinn)
     kineticMatrixPCPC = np.array([1 / Rbinp, 1 / Rm, 1 / Rbinn], dtype=np.double) * TInAkk / NonEqSystemQ.GetTbase()
     
     #Перекрестные блоки кинетической матрицы по процессам
@@ -142,6 +147,8 @@ def LiionBatteryStateFunction(stateCoordinates,
     kineticMatrixHeatPC = np.array([])
     
     #Главный блок кинетической матрицы по теплообмену
+    KInAkk = PosLinearFilter(KInAkk)
+    KBAkk = PosLinearFilter(KBAkk)
     kineticMatrixHeatHeat = np.array([KInAkk*TInAkk*TBAkk, KBAkk*TBAkk*Tokr], dtype=np.double) / NonEqSystemQ.GetTbase()
     
     #Обратная теплоемкость литий-ионного аккумулятора

@@ -3,7 +3,7 @@ import numpy as np
 import LiionBattery.LiionBatteryFunctions.LiionBatteryFunctionsStation as lbfs
 from MathProtEnergyProc import NonEqSystemQ
 
-from MathProtEnergyProc.CorrecionModel import PosLinearFilter
+from MathProtEnergyProc.CorrectionModel import PosLinearFilter
 
 #Функция состояния для литий-ионного аккумулятора
 def LiionBatteryStateFunction(stateCoordinates,

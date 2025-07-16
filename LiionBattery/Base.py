@@ -3,7 +3,7 @@ import pandas as pd
 import json as js
 import os
 
-from MathProtEnergyProc.DatasAugmentation import HStackMatrixRepeat
+from MathProtEnergyProc.DatasIntegration import HStackMatrixRepeat
 from MathProtEnergyProc.IndexedNames import IndexedNamesFromIndexes
 
 from LiionBattery.LiionBatteryDynamics.LiionBatteryDynamics import LiionBatteryDynamicFunctionSaveVec

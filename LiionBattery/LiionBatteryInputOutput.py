@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -213,6 +214,7 @@ def LiionBatteryOutputValues(dyns, fileName,
                               "Icur": Icur.reshape(-1,),
                               "Tokr": Tokr.reshape(-1,)
                               })  # Структура сохраняемых данных
+    print("Writting file: " + os.path.basename(fileName))
     DynamicDatas.to_csv(fileName, sep=sep,
                         decimal=dec, index=False)  # Сохраняем в csv файл
 

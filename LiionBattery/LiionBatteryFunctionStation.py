@@ -1,6 +1,6 @@
 import numpy as np
 
-import .LiionBatteryFunctionsStation as lbfs
+from .LiionBatteryFunctionsStation import funEbin, funCbin, funRbin
 from MathProtEnergyProc import NonEqSystemQBase
 
 from MathProtEnergyProc.CorrectionModel import PosLinearFilter
@@ -105,13 +105,13 @@ def LiionBatteryStateFunction(stateCoordinates,
     nuLin = qbinn + q  # Отрицательный электрод
 
     # Определяем ЭДС двойных слоев
-    (Ebinp, Ebinn) = lbfs.funEbin(EbinpC, EbinnC, EbinpD, EbinnD, nuLip,
-                                  nuLin, rLiEpE, rLiEnE, Cnom,
-                                  betaEQ2p, betaEQ2n, betaEQ3p, betaEQ3n)
+    (Ebinp, Ebinn) = funEbin(EbinpC, EbinnC, EbinpD, EbinnD, nuLip,
+                             nuLin, rLiEpE, rLiEnE, Cnom,
+                             betaEQ2p, betaEQ2n, betaEQ3p, betaEQ3n)
 
     # Определяем емкости двойных слоев
-    (Cbinp, Cbinn) = lbfs.funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
-                                  betaCQ2p, betaCQ2n, betaCQ3p, betaCQ3n)
+    (Cbinp, Cbinn) = funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
+                             betaCQ2p, betaCQ2n, betaCQ3p, betaCQ3n)
 
     # Определяем падения напряжения на двойных слоях
     dissUbinp = Ebinp - qbinp / Cbinp  # Положительный двойной слой
@@ -127,15 +127,15 @@ def LiionBatteryStateFunction(stateCoordinates,
     beta = np.array([])
 
     # Определяем сопротивления двойных слоев и мембраны
-    (Rbinp, Rbinn, Rm) = lbfs.funRbin(alphaRIp, alphaRIn, dissUbinp, dissUbinn,
-                                      nRQp, nRQn, alphaRQp, alphaRQn, nuLip, nuLin,
-                                      alphaRTp, alphaRTn, bRTp, bRTn, rCRTp, rCRTn,
-                                      alphaRTm, bRTm, rCRTm, TInAkk, Cnom, Rbin0p,
-                                      Rbin0n, Rm0,
-                                      betaRI2p, betaRI2n, betaRI3p, betaRI3n,
-                                      betaRQ2p, betaRQ2n, betaRQ3p, betaRQ3n,
-                                      betaRT2p, betaRT2m, betaRT2n, betaRT3p,
-                                      betaRT3m, betaRT3n)
+    (Rbinp, Rbinn, Rm) = funRbin(alphaRIp, alphaRIn, dissUbinp, dissUbinn,
+                                 nRQp, nRQn, alphaRQp, alphaRQn, nuLip, nuLin,
+                                 alphaRTp, alphaRTn, bRTp, bRTn, rCRTp, rCRTn,
+                                 alphaRTm, bRTm, rCRTm, TInAkk, Cnom, Rbin0p,
+                                 Rbin0n, Rm0,
+                                 betaRI2p, betaRI2n, betaRI3p, betaRI3n,
+                                 betaRQ2p, betaRQ2n, betaRQ3p, betaRQ3n,
+                                 betaRT2p, betaRT2m, betaRT2n, betaRT3p,
+                                 betaRT3m, betaRT3n)
 
     # Главный блок кинетической матрицы по процессам
     Rbinp = PosLinearFilter(Rbinp)

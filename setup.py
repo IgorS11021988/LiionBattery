@@ -6,9 +6,7 @@ setup(name = "LiionBattery",
       author = "Igor Starostin",
       author_email = "starostinigo@yandex.ru",
       description="Liion accumulators modeling by mathematical prototiping method",
-      packages = ["LiionBattery",
-                  "LiionBattery.LiionBatteryDynamics",
-                  "LiionBattery.LiionBatteryFunctions"],
+      packages = ["LiionBattery"],
       scripts = [],
-      dependency_links = ["numpy","pandas","matplotlib"]
+      dependency_links = ["numpy","pandas"]
       )

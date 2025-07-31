@@ -193,11 +193,27 @@ def LiionBatteryInputArrayCreate(Pars,  # Параметры
             ts)
 
 
+# Сохранение изображения в файл
+def saveGraphicsImage(imageDir,  # Директория изображения
+                      graphicName,  # Имя графика
+                      dynamicName  # Имя динамики
+                      ):
+    # Формируем полное имя изображения
+    fullImageName = os.path.join(imageDir, graphicName + dynamicName + ".jpg")
+    
+    # Сохраняем изображение
+    plt.savefig(fullImageName)
+
+
 # Обработка результатов моделирования динамик
 def LiionBatteryOutputValues(dyns, fileName,
                              sep, dec,
                              plotGraphics=False  # Необходимость построения графиков
                              ):
+    # Имя файла динамики
+    dynFileName = os.path.basename(fileName)  # Имя файла динамики с расширением
+    dynName = os.path.splitext(dynFileName)[0]  # Имя динамики (имя файла динамики без расширения)
+    
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
      TInAkk, TBAkk, q, Icur, Tokr) = dyns
@@ -214,32 +230,51 @@ def LiionBatteryOutputValues(dyns, fileName,
                               "Icur": Icur.reshape(-1,),
                               "Tokr": Tokr.reshape(-1,)
                               })  # Структура сохраняемых данных
-    print("Writting file: " + os.path.basename(fileName))
+    print("Writting dynamic: " + dynName)
     DynamicDatas.to_csv(fileName, sep=sep,
                         decimal=dec, index=False)  # Сохраняем в csv файл
 
     # Рисуем при необходимости график
     if plotGraphics:
+        # Получаем путь к имени файла графиков
+        dynDirName = os.path.dirname(fileName)
+        
+        # Рисуем графики и сохраняем в файлы
         OneTimeValueGraphic(t,  # Моменты времени
                             Ukl,  # Величины в моменты времени
                             "Напряжение на клеммах",  # Имя полотна
                             "Напряжение, В"  # Имя оси
                             )  # График напряжения на клеммах
+        saveGraphicsImage(dynDirName,  # Директория изображения
+                          "AkkVoltage",  # Имя графика
+                          dynName  # Имя динамики
+                          )  # Сохраняем в файл
         TimesValuesGraphics(t,  # Моменты времени
                             [TInAkk, TBAkk],  # Список величин в моменты времени
                             ["Содержимое", "Корпус"],  # Список имен величин
                             "Температура элемента",  # Имя полотна
                             "Температура, град С",  # Имя оси
                             )  # Графики температуры содержимого и корпуса элемента
+        saveGraphicsImage(dynDirName,  # Директория изображения
+                          "AkkTemperature",  # Имя графика
+                          dynName  # Имя динамики
+                          )  # Сохраняем в файл
         TimesValuesGraphics(t,  # Моменты времени
                             [Ubinn, Ubinp, Um],  # Список величин в моменты времени
                             ["Отрицательный двойной слой", "Положительный двойной слой", "Мембрана"],  # Список имен величин
                             "Напряжения в элементе",  # Имя полотна
                             "Напряжение, В",  # Имя оси
                             )  # Графики напряжений двойных слоев и мембраны элемента
+        saveGraphicsImage(dynDirName,  # Директория изображения
+                          "Voltages",  # Имя графика
+                          dynName  # Имя динамики
+                          )  # Сохраняем в файл
         OneTimeValueGraphic(t,  # Моменты времени
                             Icur,  # Величины в моменты времени
                             "Ток в цепи",  # Имя полотна
                             "Ток, Cnom"  # Имя оси
                             )  # График тока во внешней цепи
-        plt.show()
+        saveGraphicsImage(dynDirName,  # Директория изображения
+                          "Current",  # Имя графика
+                          dynName  # Имя динамики
+                          )  # Сохраняем в файл

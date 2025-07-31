@@ -1,7 +1,7 @@
 import numpy as np
 
-import .LiionBatteryFunctionsStation as lbfs
-import .fICharge as fic
+from .LiionBatteryFunctionsStation import funEbin, funCbin
+from .fICharge import fICharge
 
 
 # Функция состояния для литий-ионного аккумулятора
@@ -11,9 +11,9 @@ def LiionBatteryCharacteristicsFunction(t,  # Моменты времени
                                         systemParameters  # Параметры системы
                                         ):
     # Получаем динамику тока
-    (Icur, otherSystemParameters) = fic.fICharge(np.array(t, dtype=np.double),  # Моменты времени
-                                                 systemParameters  # Параметры системы
-                                                 )
+    (Icur, otherSystemParameters) = fICharge(np.array(t, dtype=np.double),  # Моменты времени
+                                             systemParameters  # Параметры системы
+                                             )
     Icur = np.array(Icur, dtype=np.double).reshape(-1)  # Приводим токи к одномерному массиву
 
     # Получаем координаты состояния
@@ -62,13 +62,13 @@ def LiionBatteryCharacteristicsFunction(t,  # Моменты времени
     nuLin = qbinn + q  # Отрицательный электрод
 
     # Определяем ЭДС двойных слоев
-    (Ebinp, Ebinn) = lbfs.funEbin(EbinpC, EbinnC, EbinpD, EbinnD, nuLip,
-                                  nuLin, rLiEpE, rLiEnE, Cnom,
-                                  betaEQ2p, betaEQ2n, betaEQ3p, betaEQ3n)
+    (Ebinp, Ebinn) = funEbin(EbinpC, EbinnC, EbinpD, EbinnD, nuLip,
+                             nuLin, rLiEpE, rLiEnE, Cnom,
+                             betaEQ2p, betaEQ2n, betaEQ3p, betaEQ3n)
 
     # Определяем емкости двойных слоев
-    (Cbinp, Cbinn) = lbfs.funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
-                                  betaCQ2p, betaCQ2n, betaCQ3p, betaCQ3n)
+    (Cbinp, Cbinn) = funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
+                             betaCQ2p, betaCQ2n, betaCQ3p, betaCQ3n)
 
     # Рассчитываем напряжения двойных слоев
     Ubinp = qbinp / Cbinp  # Положительный двойной слой

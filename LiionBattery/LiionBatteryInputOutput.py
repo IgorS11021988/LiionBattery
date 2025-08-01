@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 from pandas import DataFrame
 
-from MathProtEnergyProcSynDatas.ValuesGraphics import OneTimeValueGraphic, TimesValuesGraphics
+from MathProtEnergyProcSynDatas.ValuesGraphics import OneTimeValueGraphic, TimesValuesGraphics, SaveGraphicsImage
 
 
 # Функция расчета динамики
@@ -193,18 +193,6 @@ def LiionBatteryInputArrayCreate(Pars,  # Параметры
             ts)
 
 
-# Сохранение изображения в файл
-def saveGraphicsImage(imageDir,  # Директория изображения
-                      graphicName,  # Имя графика
-                      dynamicName  # Имя динамики
-                      ):
-    # Формируем полное имя изображения
-    fullImageName = os.path.join(imageDir, graphicName + dynamicName + ".jpg")
-    
-    # Сохраняем изображение
-    plt.savefig(fullImageName)
-
-
 # Обработка результатов моделирования динамик
 def LiionBatteryOutputValues(dyns, fileName,
                              sep, dec,
@@ -245,7 +233,7 @@ def LiionBatteryOutputValues(dyns, fileName,
                             "Напряжение на клеммах",  # Имя полотна
                             "Напряжение, В"  # Имя оси
                             )  # График напряжения на клеммах
-        saveGraphicsImage(dynDirName,  # Директория изображения
+        SaveGraphicsImage(dynDirName,  # Директория изображения
                           "AkkVoltage",  # Имя графика
                           dynName  # Имя динамики
                           )  # Сохраняем в файл
@@ -255,7 +243,7 @@ def LiionBatteryOutputValues(dyns, fileName,
                             "Температура элемента",  # Имя полотна
                             "Температура, град С",  # Имя оси
                             )  # Графики температуры содержимого и корпуса элемента
-        saveGraphicsImage(dynDirName,  # Директория изображения
+        SaveGraphicsImage(dynDirName,  # Директория изображения
                           "AkkTemperature",  # Имя графика
                           dynName  # Имя динамики
                           )  # Сохраняем в файл
@@ -265,7 +253,7 @@ def LiionBatteryOutputValues(dyns, fileName,
                             "Напряжения в элементе",  # Имя полотна
                             "Напряжение, В",  # Имя оси
                             )  # Графики напряжений двойных слоев и мембраны элемента
-        saveGraphicsImage(dynDirName,  # Директория изображения
+        SaveGraphicsImage(dynDirName,  # Директория изображения
                           "Voltages",  # Имя графика
                           dynName  # Имя динамики
                           )  # Сохраняем в файл
@@ -274,7 +262,7 @@ def LiionBatteryOutputValues(dyns, fileName,
                             "Ток в цепи",  # Имя полотна
                             "Ток, Cnom"  # Имя оси
                             )  # График тока во внешней цепи
-        saveGraphicsImage(dynDirName,  # Директория изображения
+        SaveGraphicsImage(dynDirName,  # Директория изображения
                           "Current",  # Имя графика
                           dynName  # Имя динамики
                           )  # Сохраняем в файл

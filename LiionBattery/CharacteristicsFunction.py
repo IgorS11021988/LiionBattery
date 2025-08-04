@@ -1,15 +1,15 @@
 import numpy as np
 
-from .LiionBatteryFunctionsStation import funEbin, funCbin
+from .StationFunctions import funEbin, funCbin
 from .fICharge import fICharge
 
 
 # Функция состояния для литий-ионного аккумулятора
-def LiionBatteryCharacteristicsFunction(t,  # Моменты времени
-                                        stateCoordinates,  # Координаты состояния
-                                        reducedTemp,  # Приведенные температуры
-                                        systemParameters  # Параметры системы
-                                        ):
+def CharacteristicsFunction(t,  # Моменты времени
+                            stateCoordinates,  # Координаты состояния
+                            reducedTemp,  # Приведенные температуры
+                            systemParameters  # Параметры системы
+                            ):
     # Получаем динамику тока
     (Icur, otherSystemParameters) = fICharge(np.array(t, dtype=np.double),  # Моменты времени
                                              systemParameters  # Параметры системы

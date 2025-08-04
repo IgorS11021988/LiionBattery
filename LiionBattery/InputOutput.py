@@ -1,17 +1,16 @@
-import os
 import numpy as np
 from matplotlib import pyplot as plt
 
 from pandas import DataFrame
 
-from MathProtEnergyProcSynDatas.ValuesGraphics import OneTimeValueGraphic, TimesValuesGraphics, SaveGraphicsImage
+from MathProtEnergyProcSynDatas.ValuesGraphics import OneTimeValueGraphic, TimesValuesGraphics
 
 
 # Функция расчета динамики
-def LiionBatteryInputArrayCreate(Pars,  # Параметры
+def InputArrayCreate(Pars,  # Параметры
 
-                                 integrateAttributes  # Аттрибуты интегрирования
-                                 ):  # Формирование массивов входных параметров
+                     integrateAttributes  # Аттрибуты интегрирования
+                     ):  # Формирование массивов входных параметров
     # Корректируем аттрибуты токов
     Pars[["I",  # Ток во внешней цепи
           "IStepDischarge",  # Ток разряда после ступеньки, Cnom
@@ -194,14 +193,10 @@ def LiionBatteryInputArrayCreate(Pars,  # Параметры
 
 
 # Обработка результатов моделирования динамик
-def LiionBatteryOutputValues(dyns, fileName,
-                             sep, dec,
-                             plotGraphics=False  # Необходимость построения графиков
-                             ):
-    # Имя файла динамики
-    dynFileName = os.path.basename(fileName)  # Имя файла динамики с расширением
-    dynName = os.path.splitext(dynFileName)[0]  # Имя динамики (имя файла динамики без расширения)
-    
+def OutputValues(dyns, fileName,
+                 sep, dec,
+                 plotGraphics=False  # Необходимость построения графиков
+                 ):
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
      TInAkk, TBAkk, q, Icur, Tokr) = dyns
@@ -218,51 +213,31 @@ def LiionBatteryOutputValues(dyns, fileName,
                               "Icur": Icur.reshape(-1,),
                               "Tokr": Tokr.reshape(-1,)
                               })  # Структура сохраняемых данных
-    print("Writting dynamic: " + dynName)
     DynamicDatas.to_csv(fileName, sep=sep,
                         decimal=dec, index=False)  # Сохраняем в csv файл
 
     # Рисуем при необходимости график
     if plotGraphics:
-        # Получаем путь к имени файла графиков
-        dynDirName = os.path.dirname(fileName)
-        
-        # Рисуем графики и сохраняем в файлы
         OneTimeValueGraphic(t,  # Моменты времени
                             Ukl,  # Величины в моменты времени
                             "Напряжение на клеммах",  # Имя полотна
                             "Напряжение, В"  # Имя оси
                             )  # График напряжения на клеммах
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "AkkVoltage",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
         TimesValuesGraphics(t,  # Моменты времени
                             [TInAkk, TBAkk],  # Список величин в моменты времени
                             ["Содержимое", "Корпус"],  # Список имен величин
                             "Температура элемента",  # Имя полотна
                             "Температура, град С",  # Имя оси
                             )  # Графики температуры содержимого и корпуса элемента
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "AkkTemperature",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
         TimesValuesGraphics(t,  # Моменты времени
                             [Ubinn, Ubinp, Um],  # Список величин в моменты времени
                             ["Отрицательный двойной слой", "Положительный двойной слой", "Мембрана"],  # Список имен величин
                             "Напряжения в элементе",  # Имя полотна
                             "Напряжение, В",  # Имя оси
                             )  # Графики напряжений двойных слоев и мембраны элемента
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "Voltages",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
         OneTimeValueGraphic(t,  # Моменты времени
                             Icur,  # Величины в моменты времени
                             "Ток в цепи",  # Имя полотна
                             "Ток, Cnom"  # Имя оси
                             )  # График тока во внешней цепи
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "Current",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
+        plt.show()

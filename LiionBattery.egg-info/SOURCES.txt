@@ -1,10 +1,10 @@
 README.txt
 setup.py
-LiionBattery/LiionBatteryFunctionCharacteristics.py
-LiionBattery/LiionBatteryFunctionStation.py
-LiionBattery/LiionBatteryFunctionsStation.py
-LiionBattery/LiionBatteryInputOutput.py
-LiionBattery/LiionBatteryStructure.py
+LiionBattery/CharacteristicsFunction.py
+LiionBattery/InputOutput.py
+LiionBattery/StationFunction.py
+LiionBattery/StationFunctions.py
+LiionBattery/Structure.py
 LiionBattery/__init__.py
 LiionBattery/fICharge.py
 LiionBattery/fU.py

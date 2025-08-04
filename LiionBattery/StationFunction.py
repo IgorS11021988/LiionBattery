@@ -1,15 +1,15 @@
 import numpy as np
 
-from .LiionBatteryFunctionsStation import funEbin, funCbin, funRbin
+from .StationFunctions import funEbin, funCbin, funRbin
 from MathProtEnergyProc import NonEqSystemQBase
 
 from MathProtEnergyProc.CorrectionModel import PosLinearFilter
 
 
 # Функция состояния для литий-ионного аккумулятора
-def LiionBatteryStateFunction(stateCoordinates,
-                              reducedTemp,
-                              systemParameters):
+def StateFunction(stateCoordinates,
+                  reducedTemp,
+                  systemParameters):
     # получаем электрические заряды
     [qbinp,  # Электрический заряд положительного двойного слоя
      qm,  # Электрический заряд мембраны

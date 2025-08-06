@@ -94,12 +94,8 @@ def InputArrayCreate(Pars,  # Параметры
                 IStepZeros = 1.011 * np.abs(Pars["IStepDischarge"][bIZeros])  # Ненулевой ток (по модулю)
                 Tints[bIZeros] = Pars["cTIStep"][bIZeros] + cqost / IStepZeros  # Обновленные времена интегрирования
 
-    # Корректируем форму времени интегрирования
-    if Tints.shape[0] > 1:
-        Tints.shape = (-1, 1)
-
     # Постоянная времени конца заряда
-    Pars["cTauEndCharge"] *= Tints.reshape(-1,)
+    Pars["cTauEndCharge"] *= Tints
 
     # Массив параметров
     systemParameters = Pars[["I",  # Ток во внешней цепи, А

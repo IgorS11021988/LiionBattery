@@ -4,6 +4,7 @@ import numpy as np
 from pandas import DataFrame
 
 from MathProtEnergyProcSynDatas.ValuesGraphics import OneTimeValueGraphic, TimesValuesGraphics, SaveGraphicsImage
+from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
 
 
 # Функция расчета динамики
@@ -179,10 +180,9 @@ def InputArrayCreate(Pars,  # Параметры
 
     #  Моменты времени
     NPoints = np.array(integrateAttributes["NPoints"], dtype=np.int32)  # Числа точек интегрирования
-    tBegins = np.zeros_like(Tints).reshape(-1,)  # Начальные моменты времени
-    ts = []
-    for ind in range(len(NPoints)):
-        ts.append(np.linspace(tBegins[ind], Tints.reshape(-1,)[ind], NPoints[ind]))
+    ts = LinearTimesMoments(Tints,  # Времена интегрирования
+                            NPoints  # Числа точек интегрирования
+                            )
 
     # Возвращаем исходные данные динамики системы
     return (Tints,

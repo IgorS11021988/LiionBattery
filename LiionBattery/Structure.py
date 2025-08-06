@@ -1,15 +1,8 @@
-from MathProtEnergyProc import NonEqSystemQ
-from MathProtEnergyProc import NonEqSystemQDyn
-from MathProtEnergyProc.IntegrateDyn import standartIntegrateDyn
-
 from .StationFunction import StateFunction
-from .CharacteristicsFunction import CharacteristicsFunction
-from .fU import fU
 
 
-# Функция расчета динамики
-def StructureDynamic(integrateMethod  # Метод интегрирования дифференциальных уравнений
-                     ):  # Структура для расчета одной динамики
+# Функция структуры аккумулятора
+def StructureFunction():
     # Описываем структуру литий-ионного элемента
     stateCoordinatesNames = ["qbinp", "qm", "qbinn", "q"]  # Имена координат состояния
     processCoordinatesNames = ["dqbinp", "dqm", "dqbinn"]  # Имена координат процессов
@@ -46,48 +39,47 @@ def StructureDynamic(integrateMethod  # Метод интегрирования 
     stateCoordinatesVarStreamsNames = ["qbinp", "qm", "qbinn", "q"]  # Имена переменных внешних потоков
     heatEnergyPowersVarStreamsNames = ["EnPowBAkk"]  # Имена переменных внешних потоков теплоты
 
-    # Литий-ионный аккумулятор
-    sysStructure = NonEqSystemQ(stateCoordinatesNames,  # Имена координат состояния
-                                processCoordinatesNames,  # Имена координат процессов
-                                energyPowersNames,  # Имена энергетических степеней свободы
-                                reducedTemperaturesEnergyPowersNames,  # Имена приведенных температур энергетических степеней свободы
-                                energyPowersBetNames,  # Имена взаимодействий между энергетическими степенями свободы
-                                heatTransfersNames,  # Имена потоков переноса теплоты
-                                heatTransfersOutputEnergyPowersNames,  # Имена энергетических степеней свободы, с которых уходит теплота
-                                heatTransfersInputEnergyPowersNames,  # Имена энергетических степеней свободы, на которые приходит теплота
+    # Выводим структуру литий-ионного аккумулятора
+    return (stateCoordinatesNames,  # Имена координат состояния
+            processCoordinatesNames,  # Имена координат процессов
+            energyPowersNames,  # Имена энергетических степеней свободы
+            reducedTemperaturesEnergyPowersNames,  # Имена приведенных температур энергетических степеней свободы
+            energyPowersBetNames,  # Имена взаимодействий между энергетическими степенями свободы
+            heatTransfersNames,  # Имена потоков переноса теплоты
+            heatTransfersOutputEnergyPowersNames,  # Имена энергетических степеней свободы, с которых уходит теплота
+            heatTransfersInputEnergyPowersNames,  # Имена энергетических степеней свободы, на которые приходит теплота
+            stateCoordinatesStreamsNames,  # Имена координат состояния, изменяемых в результате внешних потоков
+            heatEnergyPowersStreamsNames,  # Имена потоков теплоты на энергетические степени свободы
+            stateFunction,  # Функция состояния
+            stateCoordinatesVarBalanceNames,  # Имена переменных коэффициентов матрицы баланса по координатам состояния
+            processCoordinatesVarBalanceNames,  # Имена переменных коэффициентов матрицы баланса по координатам процессов
+            energyPowersVarTemperatureNames,  # Имена переменных температур энергетических степеней свободы
+            stateCoordinatesVarPotentialsInterNames,  # Имена переменных потенциалов взаимодействия по координатам состояния
+            energyPowersVarPotentialsInterNames,  # Имена переменных потенциалов взаимодействия по энергетическим степеням свободы
+            stateCoordinatesVarPotentialsInterBetNames,  # Имена переменных потенциалов взаимодействия для взаимодействий между энергетическими степенями свободы по координатам состояния
+            energyPowersVarPotentialsInterBetNames,  # Имена переменных потенциалов взаимодействия для взаимодействий между энергетическими степенями свободы по энергетическим степеням свободы
+            energyPowersVarBetaNames,  # Имена переменных долей распределения некомпенсированной теплоты энергетических степеней свободы
+            processCoordinatesVarBetaNames,  # Имена переменных долей распределения некомпенсированной теплоты координат процессов
+            reducedTemperaturesEnergyPowersVarInvHeatCapacityNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
+            energyPowersVarInvHeatCapacityNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к энергетическим степеням свободы
+            reducedTemperaturesEnergyPowersVarHeatEffectNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
+            stateCoordinatesVarHeatEffectNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к координатам состояния
+            varKineticPCPCNames,  # Имена сопряженностей между собой координат процессов
+            varKineticPCPCAffNames,  # Имена сопряженностей между собой термодинамических сил
+            varKineticPCHeatNames,  # Имена сопряженностей координат процессов с теплопереносами
+            varKineticPCHeatAffNames,  # Имена сопряженностей термодинамических сил с теплопереносами
+            varKineticHeatPCNames,  # Имена сопряженностей теплопереносов с координатами процессов
+            varKineticHeatPCAffNames,  # Имена сопряженностей теплопереносов с термодинамическими силами
+            varKineticHeatHeatNames,  # Имена сопряженностей между собой перенесенных теплот
+            varKineticHeatHeatAffNames,  # Имена сопряженностей между собой термодинамических сил по переносу теплот
+            stateCoordinatesVarStreamsNames,  # Имена переменных внешних потоков
+            heatEnergyPowersVarStreamsNames  # Имена переменных внешних потоков теплоты
+            )
 
-                                stateCoordinatesStreamsNames,  # Имена координат состояния, изменяемых в результате внешних потоков
-                                heatEnergyPowersStreamsNames,  # Имена потоков теплоты на энергетические степени свободы
 
-                                stateFunction,  # Функция состояния
-
-                                stateCoordinatesVarBalanceNames,  # Имена переменных коэффициентов матрицы баланса по координатам состояния
-                                processCoordinatesVarBalanceNames,  # Имена переменных коэффициентов матрицы баланса по координатам процессов
-                                energyPowersVarTemperatureNames,  # Имена переменных температур энергетических степеней свободы
-                                stateCoordinatesVarPotentialsInterNames,  # Имена переменных потенциалов взаимодействия по координатам состояния
-                                energyPowersVarPotentialsInterNames,  # Имена переменных потенциалов взаимодействия по энергетическим степеням свободы
-                                stateCoordinatesVarPotentialsInterBetNames,  # Имена переменных потенциалов взаимодействия для взаимодействий между энергетическими степенями свободы по координатам состояния
-                                energyPowersVarPotentialsInterBetNames,  # Имена переменных потенциалов взаимодействия для взаимодействий между энергетическими степенями свободы по энергетическим степеням свободы
-                                energyPowersVarBetaNames,  # Имена переменных долей распределения некомпенсированной теплоты энергетических степеней свободы
-                                processCoordinatesVarBetaNames,  # Имена переменных долей распределения некомпенсированной теплоты координат процессов
-                                reducedTemperaturesEnergyPowersVarInvHeatCapacityNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
-                                energyPowersVarInvHeatCapacityNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к энергетическим степеням свободы
-                                reducedTemperaturesEnergyPowersVarHeatEffectNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
-                                stateCoordinatesVarHeatEffectNames,  # Имена переменных коэффициентов обратных теплоемкостей по отношению к координатам состояния
-
-                                varKineticPCPCNames,  # Имена сопряженностей между собой координат процессов
-                                varKineticPCPCAffNames,  # Имена сопряженностей между собой термодинамических сил
-                                varKineticPCHeatNames,  # Имена сопряженностей координат процессов с теплопереносами
-                                varKineticPCHeatAffNames,  # Имена сопряженностей термодинамических сил с теплопереносами
-                                varKineticHeatPCNames,  # Имена сопряженностей теплопереносов с координатами процессов
-                                varKineticHeatPCAffNames,  # Имена сопряженностей теплопереносов с термодинамическими силами
-                                varKineticHeatHeatNames,  # Имена сопряженностей между собой перенесенных теплот
-                                varKineticHeatHeatAffNames,  # Имена сопряженностей между собой термодинамических сил по переносу теплот
-
-                                stateCoordinatesVarStreamsNames,  # Имена переменных внешних потоков
-                                heatEnergyPowersVarStreamsNames  # Имена переменных внешних потоков теплоты
-                                )
-
+# Функция постоянных параметров литий-ионного аккумулятора
+def ConstParametersFunction(sysStructure  # Структура системы
+                            ):
     # Задаем связь между коордиинатами состояния и процессами
     sysStructure.SetBalanceStateCoordinatesConstElement("qbinp", "dqbinp", 1)
     sysStructure.SetBalanceStateCoordinatesConstElement("qm", "dqm", 1)
@@ -97,11 +89,3 @@ def StructureDynamic(integrateMethod  # Метод интегрирования 
     sysStructure.SetBetaConstElement("EnPowInAkk", "dqbinp", 1.0)
     sysStructure.SetBetaConstElement("EnPowInAkk", "dqm", 1.0)
     sysStructure.SetBetaConstElement("EnPowInAkk", "dqbinn", 1.0)
-
-    # Задаем класс динамики системы
-    integDynamic = standartIntegrateDyn(method=integrateMethod)
-    return NonEqSystemQDyn(sysStructure,  # литий-ионный аккумулятор
-                           fU,  # Функция условий протекания процессов
-                           CharacteristicsFunction,  # Функция внешних параметров
-                           integDynamic  # Метод интегрирования дифференциальных уравнений
-                           )

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 
 from pandas import DataFrame
@@ -214,7 +215,13 @@ def OutputValues(dyns, fileName,
 
     # Рисуем при необходимости график
     if plotGraphics:
-        print("Graphic dynamic index: " + str(index))
+      # Получаем имена директории и динамики
+      dynDirName = os.path.dirname(fileName)  # Имя директории
+      dynName = os.path.basename(fileName)  # Имя файла динамики с расширением
+      dynName = os.path.splitext(dynName)[0]  # Имя файла динамики без расширения
+
+      # Строим графики  
+      print("Graphic dynamic index: " + str(index))  # Выводим сообщение о построении графика
         OneTimeValueGraphic(t,  # Моменты времени
                             Ukl,  # Величины в моменты времени
                             "Напряжение на клеммах",  # Имя полотна

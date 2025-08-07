@@ -189,7 +189,7 @@ def InputArrayCreate(Pars,  # Параметры
 
 # Обработка результатов моделирования динамик
 def OutputValues(dyns, fileName,
-                 sep, dec,
+                 sep, dec, index,
                  plotGraphics=False  # Необходимость построения графиков
                  ):
     # Получаем величины из кортежа

@@ -208,13 +208,13 @@ def OutputValues(dyns, fileName,
                               "Icur": Icur.reshape(-1,),
                               "Tokr": Tokr.reshape(-1,)
                               })  # Структура сохраняемых данных
-    print("Writting dynamic: " + index)
+    print("Writting dynamic: " + str(index))
     DynamicDatas.to_csv(fileName, sep=sep,
                         decimal=dec, index=False)  # Сохраняем в csv файл
 
     # Рисуем при необходимости график
     if plotGraphics:
-        print("Graphic dynamic index: ", index)
+        print("Graphic dynamic index: " + str(index))
         OneTimeValueGraphic(t,  # Моменты времени
                             Ukl,  # Величины в моменты времени
                             "Напряжение на клеммах",  # Имя полотна

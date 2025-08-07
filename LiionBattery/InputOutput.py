@@ -1,4 +1,3 @@
-import os
 import numpy as np
 
 from pandas import DataFrame
@@ -193,10 +192,6 @@ def OutputValues(dyns, fileName,
                  sep, dec,
                  plotGraphics=False  # Необходимость построения графиков
                  ):
-    # Имя файла динамики
-    dynFileName = os.path.basename(fileName)  # Имя файла динамики с расширением
-    dynName = os.path.splitext(dynFileName)[0]  # Имя динамики (имя файла динамики без расширения)
-
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
      TInAkk, TBAkk, q, Icur, Tokr) = dyns
@@ -213,15 +208,13 @@ def OutputValues(dyns, fileName,
                               "Icur": Icur.reshape(-1,),
                               "Tokr": Tokr.reshape(-1,)
                               })  # Структура сохраняемых данных
-    print("Writting dynamic: " + dynName)
+    print("Writting dynamic: " + index)
     DynamicDatas.to_csv(fileName, sep=sep,
                         decimal=dec, index=False)  # Сохраняем в csv файл
 
     # Рисуем при необходимости график
     if plotGraphics:
-        # Получаем путь к имени файла графиков
-        dynDirName = os.path.dirname(fileName)
-
+        print("Graphic dynamic index: ", index)
         OneTimeValueGraphic(t,  # Моменты времени
                             Ukl,  # Величины в моменты времени
                             "Напряжение на клеммах",  # Имя полотна

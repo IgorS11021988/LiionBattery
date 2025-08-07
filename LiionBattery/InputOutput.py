@@ -3,7 +3,7 @@ import numpy as np
 from pandas import DataFrame
 
 from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
-from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, NoIndicate
+from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
 from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics
 
 
@@ -252,7 +252,7 @@ def OutputValues(dyns, fileName,
 
                                sep, dec,   # Разделители (csv и десятичный соответственно)
 
-                               saveDynamicIndicator=NoIndicate,  # Индикатор сохранения динамики
-                               plotGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков
+                               saveDynamicIndicator=SaveDynamicToFileIndicate,  # Индикатор сохранения динамики
+                               saveGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков
                                index=index  # Индекс динамики
                                )

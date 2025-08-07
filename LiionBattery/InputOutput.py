@@ -1,10 +1,10 @@
-import os
 import numpy as np
 
 from pandas import DataFrame
 
-from MathProtEnergyProcSynDatas.ValuesGraphics import OneTimeValueGraphic, TimesValuesGraphics, SaveGraphicsImage
 from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
+from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, NoIndicate
+from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics
 
 
 # Функция расчета динамики
@@ -197,66 +197,62 @@ def OutputValues(dyns, fileName,
     (t, Ukl, Ubinp, Ubinn, Um,
      TInAkk, TBAkk, q, Icur, Tokr) = dyns
 
-    # Сохраняем динамику в файл
-    DynamicDatas = DataFrame({"Time": t.reshape(-1,),
-                              "Ukl": Ukl.reshape(-1,),
-                              "Ubinp": Ubinp.reshape(-1,),
-                              "Ubinn": Ubinn.reshape(-1,),
-                              "Um": Um.reshape(-1,),
-                              "TInAkk": TInAkk.reshape(-1,),
-                              "TBAkk": TBAkk.reshape(-1,),
-                              "q": q.reshape(-1,),
-                              "Icur": Icur.reshape(-1,),
-                              "Tokr": Tokr.reshape(-1,)
-                              })  # Структура сохраняемых данных
-    print("Writting dynamic: " + str(index))
-    DynamicDatas.to_csv(fileName, sep=sep,
-                        decimal=dec, index=False)  # Сохраняем в csv файл
+    # Заголовки и динамики
+    dynamicsHeaders = {"Time": t.reshape(-1,),
+                       "Ukl": Ukl.reshape(-1,),
+                       "Ubinp": Ubinp.reshape(-1,),
+                       "Ubinn": Ubinn.reshape(-1,),
+                       "Um": Um.reshape(-1,),
+                       "TInAkk": TInAkk.reshape(-1,),
+                       "TBAkk": TBAkk.reshape(-1,),
+                       "q": q.reshape(-1,),
+                       "Icur": Icur.reshape(-1,),
+                       "Tokr": Tokr.reshape(-1,)
+                       }
 
-    # Рисуем при необходимости график
-    if plotGraphics:
-        # Получаем имена директории и динамики
-        dynDirName = os.path.dirname(fileName)  # Имя директории
-        dynName = os.path.basename(fileName)  # Имя файла динамики с расширением
-        dynName = os.path.splitext(dynName)[0]  # Имя файла динамики без расширения
-  
-        # Строим графики  
-        print("Graphic dynamic index: " + str(index))  # Выводим сообщение о построении графика
-        OneTimeValueGraphic(t,  # Моменты времени
-                            Ukl,  # Величины в моменты времени
-                            "Напряжение на клеммах",  # Имя полотна
-                            "Напряжение, В"  # Имя оси
-                            )  # График напряжения на клеммах
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "AkkVoltage",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
-        TimesValuesGraphics(t,  # Моменты времени
-                            [TInAkk, TBAkk],  # Список величин в моменты времени
-                            ["Содержимое", "Корпус"],  # Список имен величин
-                            "Температура элемента",  # Имя полотна
-                            "Температура, град С",  # Имя оси
-                            )  # Графики температуры содержимого и корпуса элемента
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "AkkTemperature",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
-        TimesValuesGraphics(t,  # Моменты времени
-                            [Ubinn, Ubinp, Um],  # Список величин в моменты времени
-                            ["Отрицательный двойной слой", "Положительный двойной слой", "Мембрана"],  # Список имен величин
-                            "Напряжения в элементе",  # Имя полотна
-                            "Напряжение, В",  # Имя оси
-                            )  # Графики напряжений двойных слоев и мембраны элемента
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "Voltages",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
-        OneTimeValueGraphic(t,  # Моменты времени
-                            Icur,  # Величины в моменты времени
-                            "Ток в цепи",  # Имя полотна
-                            "Ток, Cnom"  # Имя оси
-                            )  # График тока во внешней цепи
-        SaveGraphicsImage(dynDirName,  # Директория изображения
-                          "Current",  # Имя графика
-                          dynName  # Имя динамики
-                          )  # Сохраняем в файл
+    # Одиночные графики на полотне
+    oneTimeValueGraphics = [{"values": Ukl,  # Величины в моменты времени
+                             "graphName": "Напряжение на клеммах",  # Имя полотна
+                             "yAxesName": "Напряжение, В",  # Имя оси ординат
+                             "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                             },
+
+                            {"values": Icur,  # Величины в моменты времени
+                             "graphName": "Ток в цепи",  # Имя полотна
+                             "yAxesName": "Ток, Cnom",  # Имя оси ординат
+                             "graphFileBaseName": "AkkCurrent"  # Имя файла графика
+                             }]
+
+    # Группы графиков на полотне
+    timesValuesGraphics = [{"listValues": [TInAkk, TBAkk],  # Список величин в моменты времени
+                            "listValuesNames": ["Содержимое", "Корпус"],  # Список имен величин (в моменты времени)
+                            "graphName": "Температура в литий-ионном аккумуляторе",  # Имя полотна
+                            "yAxesName": "Температура, град С",  # Имя оси
+                            "graphFileBaseName": "AkkTemperature"  # Имя файла графика
+                            },
+
+                           {"listValues": [Ubinn, Ubinp, Um],  # Список величин в моменты времени
+                            "listValuesNames": ["Отрицательный двойной слой",
+                                                "Положительный двойной слой",
+                                                "Мембрана"],  # Список имен величин (в моменты времени)
+                            "graphName": "Напряжения в литий-ионном аккумуляторе",  # Имя полотна
+                            "yAxesName": "Напряжение, В",  # Имя оси
+                            "graphFileBaseName": "InAkkVoltage"  # Имя файла графика
+                            }]
+
+    # Сохраняем динамику в .csv файл и отображаем графики
+    DynamicSaveAndSaveGraphics(dynamicsHeaders,  # Словарь динамик с заголовками
+                               fileName,  # Имя файла динамик
+
+                               t,  # Моменты времени
+                               oneTimeValueGraphics,  # Один график на одном полотне
+                               timesValuesGraphics,  # Несколько графиков на одном полотне
+
+                               plotGraphics,  # Необходимость построения графиков
+
+                               sep, dec,   # Разделители (csv и десятичный соответственно)
+
+                               saveDynamicIndicator=NoIndicate,  # Индикатор сохранения динамики
+                               plotGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков
+                               index=index  # Индекс динамики
+                               )

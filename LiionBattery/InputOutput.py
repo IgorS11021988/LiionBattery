@@ -1,7 +1,5 @@
 import numpy as np
 
-from pandas import DataFrame
-
 from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
 from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
 from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics

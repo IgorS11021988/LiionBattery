@@ -1,5 +1,4 @@
 import numpy as np
-from matplotlib.pyplot import show
 
 from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
 from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
@@ -278,4 +277,3 @@ def OutputValues(dyns, fileName,
                                saveGraphicIndicator=PlotGraphicIndicate,  # Индикатор отображения графиков
                                index=index  # Индекс динамики
                                )
-  show()

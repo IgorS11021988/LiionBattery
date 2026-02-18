@@ -1,4 +1,95 @@
-from .StationFunction import StateFunction
+import numpy as np
+
+from .StationFunction import IndepStateFunction
+
+from MathProtEnergyProc.HeatPowerValues import IntPotentialsOne, HeatValuesOne
+
+from MathProtEnergyProc.CorrectionModel import PosLinearFilter
+
+
+# Потенциалы взаимодействия в топливном элементе и камерах
+potentialInterAkk = IntPotentialsOne(["qbinp", "qm", "qbinn", "q"],  # Имена координат состояния
+                                     ["EnPowInAkk", "EnPowBAkk"],  # Имена энергетических степеней свободы
+
+                                     [     "qbinp",         "qm",      "qbinn",          "q"],  # Имена переменных потенциалов взаимодействия по координатам состояния
+                                     ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"]  # Имена переменных потенциалов взаимодействия по энергетическим степеням свободы
+                                     )
+
+# Приведенные обратные теплоемкости и тепловые эффекты
+heatValuesAkk = HeatValuesOne(["qbinp", "qm", "qbinn", "q"],  # Имена координат состояния
+                              ["EnPowInAkk", "EnPowBAkk"],  # Имена энергетических степеней свободы
+          
+                              ["EnPowInAkk", "EnPowBAkk"],  # Имена переменных коэффициентов обратных теплоемкостей по отношению к энергетическим степеням свободы
+                              ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"],  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
+                              [     "qbinp",         "qm",      "qbinn",          "q"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к координатам состояния
+                              )
+
+
+# Функция состояния для литий-ионного аккумулятора
+def StateFunction(stateCoordinates,
+                  reducedTemp,
+                  systemParameters):
+    # Получаем независимые составляющие свойств веществ и процессов
+    (I, Tokr,
+     heatStreambEnPow,
+     JSq, JST, HSqT, HSTT,
+     rAkk, KQAkk) = IndepStateFunction(stateCoordinates,
+                                       reducedTemp,
+                                       systemParameters)
+
+    # Матрица баланса
+    balanceMatrix = np.array([])
+
+    # Внешние потоки зарядов
+    stateCoordinatesStreams = np.array([-I, -I, -I, I], dtype=np.double)
+
+    # Внешние потоки теплоты
+    heatEnergyPowersStreams = np.array([heatStreambEnPow], dtype=np.double)
+
+    # Выводим температуры
+    energyPowerTemperatures = np.hstack([reducedTemp, [Tokr]])
+
+    # Потенциалы взаимодействия энергетических степеней свободы
+    potentialInter = potentialInterAkk(JSq, reducedTemp)
+
+    # Потенциалы взаимодействия между энергетическими степенями свободы
+    potentialInterBet = np.array([])
+
+    # Доли распределения некомпенсированной теплоты
+    beta = np.array([])
+
+    # Главный блок кинетической матрицы по процессам
+    kineticMatrixPCPC = 1 / PosLinearFilter(rAkk)
+
+    # Перекрестные блоки кинетической матрицы по процессам
+    kineticMatrixPCHeat = np.array([])
+    kineticMatrixHeatPC = np.array([])
+
+    # Главный блок кинетической матрицы по теплообмену
+    kineticMatrixHeatHeat = PosLinearFilter(KQAkk)
+
+    # Обратная теплоемкость и приведенные тепловые эффекты литий-ионного аккумулятора
+    (invHeatCapacityMatrixCf,  # Обратная теплоемкость водородно-воздушного топливного элемента
+     heatEffectMatrixCf  # Приведенные тепловые эффекты водородно-воздушного топливного элемента
+     ) = heatValuesAkk(JST,  # Якобиан приведенной энтропии по температурам
+                       HSTT,  # Матрица Гесса приведенной энтропии по температурам
+                       HSqT,  # Матрица Гесса приведенной энтропии по температурам и координатам состояния
+                       reducedTemp  # Температуры
+                       )
+
+    # Выводим результат
+    return (balanceMatrix,
+            stateCoordinatesStreams,
+            heatEnergyPowersStreams,
+            energyPowerTemperatures,
+            potentialInter,
+            potentialInterBet,
+            beta, kineticMatrixPCPC,
+            kineticMatrixPCHeat,
+            kineticMatrixHeatPC,
+            kineticMatrixHeatHeat,
+            invHeatCapacityMatrixCf,
+            heatEffectMatrixCf)
 
 
 # Функция структуры аккумулятора

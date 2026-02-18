@@ -114,7 +114,7 @@ def funRbin(alphaRIp, alphaRIn, dissUbinp, dissUbinn,
     rm += betaRT2m * np.power(rm, 2) + betaRT3m * np.power(rm, 3)
 
     # Выводим результат
-    return (Rbin0p * rbinp, Rbin0n * rbinn, Rm0 * rm)
+    return np.array([Rbin0p * rbinp, Rm0 * rm, Rbin0n * rbinn], dtype=np.double)
 
 
 def funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,

@@ -50,6 +50,29 @@ def InputArrayCreate(Pars,  # Параметры
     # Переводим номинальную емкость в кулоны
     Pars["Cnom"] *= 3600
 
+    # Корректируем доли неактивных ячеек
+    nonCeilNames = ["nuNonCeilp", "nuNonCeiln"]  # Имена долей разрешенных ячеек
+    bIndNonCeilMin = (Pars[nonCeilNames] < 0)
+    if np.any(bIndNonCeilMin):
+        Pars.loc[bIndNonCeilMin["nuNonCeilp"].to_numpy(), "nuNonCeilp"] = 0
+        Pars.loc[bIndNonCeilMin["nuNonCeiln"].to_numpy(), "nuNonCeiln"] = 0
+    bIndNonCeilMax = (Pars[nonCeilNames] > 100)
+    if np.any(bIndNonCeilMax):
+        Pars.loc[bIndNonCeilMax["nuNonCeilp"].to_numpy(), "nuNonCeilp"] = 100
+        Pars.loc[bIndNonCeilMax["nuNonCeiln"].to_numpy(), "nuNonCeiln"] = 100
+    Pars[nonCeilNames] /= 100
+    Pars[nonCeilNames] /= 1 - Pars[nonCeilNames]
+
+    # Корректируем сопротивления двойных слоев
+    nonCeil = 1 + ReluFilter(Pars[["betaNonCeilp1", "betaNonCeiln1"]].to_numpy() * Pars[nonCeilNames].to_numpy() + \
+                             Pars[["betaNonCeilp2", "betaNonCeiln2"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 2) + \
+                             Pars[["betaNonCeilp3", "betaNonCeiln3"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 3))
+    nonCeilQ = 1 + ReluFilter(Pars[["betaNonCeilQp1", "betaNonCeilQn1"]].to_numpy() * Pars[nonCeilNames].to_numpy() + \
+                              Pars[["betaNonCeilQp2", "betaNonCeilQn2"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 2) + \
+                              Pars[["betaNonCeilQp3", "betaNonCeilQn3"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 3))
+    Pars[["Rbin0p", "Rbin0n"]] *= nonCeil
+    Pars[["alphaRQp", "alphaRQn"]] /= nonCeilQ
+
     # Начальное состояние
     Pars["qbinp0"] *= Pars["EbinpC"] * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
     Pars["qm0"] *= rCnom  # Заряд мембраны, Кл

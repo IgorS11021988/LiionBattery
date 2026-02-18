@@ -3,13 +3,11 @@ import numpy as np
 from .StationFunctions import funEbin, funCbin, funRbin
 from MathProtEnergyProc import NonEqSystemQBase
 
-from MathProtEnergyProc.CorrectionModel import PosLinearFilter
-
 
 # Функция состояния для литий-ионного аккумулятора
-def StateFunction(stateCoordinates,
-                  reducedTemp,
-                  systemParameters):
+def IndepStateFunction(stateCoordinates,
+                       reducedTemp,
+                       systemParameters):
     # получаем электрические заряды
     [qbinp,  # Электрический заряд положительного двойного слоя
      qm,  # Электрический заряд мембраны
@@ -87,18 +85,8 @@ def StateFunction(stateCoordinates,
      Rkl  # Сопротивление клемм
      ] = systemParameters
 
-    # Матрица баланса
-    balanceMatrix = np.array([])
-
-    # Внешние потоки зарядов
-    stateCoordinatesStreams = np.array([-I, -I, -I, I], dtype=np.double)
-
-    # Внешние потоки теплоты
-    heatStreambEnPow = Rkl * np.power(I, 2)  # Внешний поток теплоты на корпус аккумулятора
-    heatEnergyPowersStreams = np.array([heatStreambEnPow], dtype=np.double)
-
-    # Выводим температуры
-    energyPowerTemperatures = np.array([TInAkk, TBAkk, Tokr], dtype=np.double)
+    # Внешний поток теплоты на корпус аккумулятора
+    heatStreambEnPow = Rkl * np.power(I, 2)
 
     # Рассчитываем приведенные (в единицах зарядовой емкости) числа молей интеркалированных в электроды ионов лития
     nuLip = qbinp + q  # Положительный электрод
@@ -117,57 +105,33 @@ def StateFunction(stateCoordinates,
     dissUbinp = Ebinp - qbinp / Cbinp  # Положительный двойной слой
     dissUbinn = Ebinn - qbinn / Cbinn  # Отрицательный двойной слой
 
-    # Потенциалы взаимодействия энергетических степеней свободы
-    potentialInter = np.array([dissUbinp, -qm / Cm, dissUbinn, Ebinp + Ebinn], dtype=np.double)
+    # Матрица Якоби приведенной энтропии по электрическим зарядам
+    JSq = np.array([dissUbinp, -qm / Cm, dissUbinn, Ebinp + Ebinn], dtype=np.double) / TInAkk
 
-    # Потенциалы взаимодействия между энергетическими степенями свободы
-    potentialInterBet = np.array([])
+    # Матрица Гесса приведенной энтропии по температуре и электрическим зарядам
+    HSqT = np.vstack([-JSq / TInAkk,
+                      np.zeros_like(JSq)])
 
-    # Доли распределения некомпенсированной теплоты
-    beta = np.array([])
+    # Приведенные первые и вторые производные приведенной энтропии по температуре
+    JST = np.array([CInAkk, CBAkk], dtype=np.double) / reducedTemp
+    HSTT = -JST / reducedTemp
 
     # Определяем сопротивления двойных слоев и мембраны
-    (Rbinp, Rbinn, Rm) = funRbin(alphaRIp, alphaRIn, dissUbinp, dissUbinn,
-                                 nRQp, nRQn, alphaRQp, alphaRQn, nuLip, nuLin,
-                                 alphaRTp, alphaRTn, bRTp, bRTn, rCRTp, rCRTn,
-                                 alphaRTm, bRTm, rCRTm, TInAkk, Cnom, Rbin0p,
-                                 Rbin0n, Rm0,
-                                 betaRI2p, betaRI2n, betaRI3p, betaRI3n,
-                                 betaRQ2p, betaRQ2n, betaRQ3p, betaRQ3n,
-                                 betaRT2p, betaRT2m, betaRT2n, betaRT3p,
-                                 betaRT3m, betaRT3n)
+    rAkk = funRbin(alphaRIp, alphaRIn, dissUbinp, dissUbinn,
+                   nRQp, nRQn, alphaRQp, alphaRQn, nuLip, nuLin,
+                   alphaRTp, alphaRTn, bRTp, bRTn, rCRTp, rCRTn,
+                   alphaRTm, bRTm, rCRTm, TInAkk, Cnom, Rbin0p,
+                   Rbin0n, Rm0,
+                   betaRI2p, betaRI2n, betaRI3p, betaRI3n,
+                   betaRQ2p, betaRQ2n, betaRQ3p, betaRQ3n,
+                   betaRT2p, betaRT2m, betaRT2n, betaRT3p,
+                   betaRT3m, betaRT3n) / (TInAkk / NonEqSystemQBase.GetTbase())
 
-    # Главный блок кинетической матрицы по процессам
-    Rbinp = PosLinearFilter(Rbinp)
-    Rm = PosLinearFilter(Rm)
-    Rbinn = PosLinearFilter(Rbinn)
-    kineticMatrixPCPC = np.array([1 / Rbinp, 1 / Rm, 1 / Rbinn], dtype=np.double) * TInAkk / NonEqSystemQBase.GetTbase()
-
-    # Перекрестные блоки кинетической матрицы по процессам
-    kineticMatrixPCHeat = np.array([])
-    kineticMatrixHeatPC = np.array([])
-
-    # Главный блок кинетической матрицы по теплообмену
-    KInAkk = PosLinearFilter(KInAkk)
-    KBAkk = PosLinearFilter(KBAkk)
-    kineticMatrixHeatHeat = np.array([KInAkk * TInAkk * TBAkk, KBAkk * TBAkk * Tokr], dtype=np.double) / NonEqSystemQBase.GetTbase()
-
-    # Обратная теплоемкость литий-ионного аккумулятора
-    invHeatCapacityMatrixCf = np.array([1 / CInAkk, 1 / CBAkk], dtype=np.double)
-
-    # Приведенные тепловые эффекты литий-ионного аккумулятора
-    heatEffectMatrixCf = potentialInter / CInAkk
+    # Коэффициенты теплообмена
+    KQAkk = np.array([KInAkk * TInAkk, KBAkk * Tokr], dtype=np.double) * TBAkk / NonEqSystemQBase.GetTbase()
 
     # Выводим результат
-    return (balanceMatrix,
-            stateCoordinatesStreams,
-            heatEnergyPowersStreams,
-            energyPowerTemperatures,
-            potentialInter,
-            potentialInterBet,
-            beta, kineticMatrixPCPC,
-            kineticMatrixPCHeat,
-            kineticMatrixHeatPC,
-            kineticMatrixHeatHeat,
-            invHeatCapacityMatrixCf,
-            heatEffectMatrixCf)
+    return (I, Tokr,
+            heatStreambEnPow,
+            JSq, JST, HSqT, HSTT,
+            rAkk, KQAkk)

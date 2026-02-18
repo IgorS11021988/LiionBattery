@@ -4,6 +4,8 @@ from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
 from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
 from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics
 
+from MathProtEnergyProc.CorrectionModel import ReluFilter
+
 
 # Функция расчета динамики
 def InputArrayCreate(Pars,  # Параметры

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .StationFunctions import funEbin, funCbin, funRbin
+from .StationFunctions import funEbin, funCbin, funRbin, funNuEMat, funMuMat, funADNu, funCf0
 from MathProtEnergyProc import NonEqSystemQBase
 
 
@@ -12,7 +12,11 @@ def IndepStateFunction(stateCoordinates,
     [qbinp,  # Электрический заряд положительного двойного слоя
      qm,  # Электрический заряд мембраны
      qbinn,  # Электрический заряд отрицательного двойного слоя
-     q  # Перенесенный через внешнюю цепь электрический заряд
+     q,  # Перенесенный через внешнюю цепь электрический заряд
+     qMatElp,  # Зарядовое сило молей недеградированного положительного электрода
+     qMatEln,  # Зарядовое сило молей недеградированного отрицательного электрода
+     qMatDegElp,  # Зарядовое сило молей деградированного положительного электрода
+     qMatDegEln  # Зарядовое сило молей деградированного отрицательного электрода
      ] = stateCoordinates
 
     # Получаем температуру
@@ -57,6 +61,18 @@ def IndepStateFunction(stateCoordinates,
      rCRTn,  # Постоянный коэффициент температурной зависимости отрицательного электрода
      alphaCQp,  # Зарядовый коэффициент емкости положительного электрода
      alphaCQn,  # Зарядовый коэффициент емкости отрицательного электрода
+     qMatAllp,  # Общее зарядовое число молей материала положительного электрода
+     qMatAlln,  # Общее зарядовое число молей материала отрицательного электрода
+     muActsp,  # Зарядовый потенциал деградационной активации положительного электрода
+     muActsn,  # Зарядовый потенциал деградационной активации отрицательного электрода
+     bMuDegp,  # Зарядовый потенциал деградационного порога положительного электрода
+     bMuDegn,  # Зарядовый потенциал деградационного порога отрицательного электрода
+     kActElp,  # Коэффициент активации положительного электрода
+     kActEln,  # Коэффициент активации отрицательного электрода
+     kDegElp,  # Коэффициент деградации положительного электрода
+     kDegEln,  # Коэффициент деградации отрицательного электрода
+     aActElsp,  # Коэффиицент токовой активации положительного электрода
+     aActElsn,  # Коэффиицент токовой активации отрицательного электрода
 
      # Получаем довесочные коэффициенты
      betaRI2p,
@@ -81,6 +97,34 @@ def IndepStateFunction(stateCoordinates,
      betaEQ2n,
      betaEQ3p,
      betaEQ3n,
+     betaMuAct2p,
+     betaMuAct2n,
+     betaMuAct3p,
+     betaMuAct3n,
+     betaNonCeilp1,
+     betaNonCeiln1,
+     betaNonCeilp2,
+     betaNonCeiln2,
+     betaNonCeilp3,
+     betaNonCeiln3,
+     betaNonCeilQp1,
+     betaNonCeilQn1,
+     betaNonCeilQp2,
+     betaNonCeilQn2,
+     betaNonCeilQp3,
+     betaNonCeilQn3,
+     betaADNuMat1p,
+     betaADNuMat1n,
+     betaADNuMat2p,
+     betaADNuMat2n,
+     betaADNuMat3p,
+     betaADNuMat3n,
+     betaADNuMatDeg1p,
+     betaADNuMatDeg1n,
+     betaADNuMatDeg2p,
+     betaADNuMatDeg2n,
+     betaADNuMatDeg3p,
+     betaADNuMatDeg3n,
 
      Rkl  # Сопротивление клемм
      ] = systemParameters
@@ -105,8 +149,21 @@ def IndepStateFunction(stateCoordinates,
     dissUbinp = Ebinp - qbinp / Cbinp  # Положительный двойной слой
     dissUbinn = Ebinn - qbinn / Cbinn  # Отрицательный двойной слой
 
+    # Определяем числа и приведенные числа молей активированных материалов электродов
+    (nuActElp, rNuActElp) = funNuEMat(qMatElp, qMatDegElp, qMatAllp)  # Положительный электрод
+    (nuActEln, rNuActEln) = funNuEMat(qMatEln, qMatDegEln, qMatAlln)  # Отрицательный электрод
+
+    # Определем активационные и деградационные потенцилы электродов
+    (muActp, muDegp) = funMuMat(nuActElp, rNuActElp,
+                                muActsp, bMuDegp,
+                                betaMuAct2p, betaMuAct3p)  # Положительный электрод
+    (muActn, muDegn) = funMuMat(nuActEln, rNuActEln,
+                                muActsn, bMuDegn,
+                                betaMuAct2n, betaMuAct3n)  # Отрицательный электрод
+
     # Матрица Якоби приведенной энтропии по электрическим зарядам
-    JSq = np.array([dissUbinp, -qm / Cm, dissUbinn, Ebinp + Ebinn], dtype=np.double) / TInAkk
+    JSq = np.array([dissUbinp, -qm / Cm, dissUbinn, Ebinp + Ebinn,
+                    muActp, muActn, muDegp, muDegn], dtype=np.double) / TInAkk
 
     # Матрица Гесса приведенной энтропии по температуре и электрическим зарядам
     HSqT = np.vstack([-JSq / TInAkk,
@@ -116,16 +173,48 @@ def IndepStateFunction(stateCoordinates,
     JST = np.array([CInAkk, CBAkk], dtype=np.double) / reducedTemp
     HSTT = -JST / reducedTemp
 
+    # Вычисляем корректировочные коэффициенты по базовому сопротивлению двойных слоев
+    corrRbinp = funCf0(qMatDegElp, qMatAllp,
+                       betaNonCeilp1, betaNonCeilp2, betaNonCeilp3)  # Положительный электрод
+    corrRbinn = funCf0(qMatDegEln, qMatAlln,
+                       betaNonCeiln1, betaNonCeiln2, betaNonCeiln3)  # Отрицательный электрод
+
+    # Вычисляем корректировочные коэффициенты по зарядовой емкости электродов
+    corrQp = funCf0(qMatDegElp, qMatAllp,
+                    betaNonCeilQp1, betaNonCeilQp2, betaNonCeilQp3)  # Положительный электрод
+    corrQn = funCf0(qMatDegEln, qMatAlln,
+                    betaNonCeilQn1, betaNonCeilQn2, betaNonCeilQn3)  # Отрицательный электрод
+
     # Определяем сопротивления двойных слоев и мембраны
     rAkk = funRbin(alphaRIp, alphaRIn, dissUbinp, dissUbinn,
-                   nRQp, nRQn, alphaRQp, alphaRQn, nuLip, nuLin,
-                   alphaRTp, alphaRTn, bRTp, bRTn, rCRTp, rCRTn,
-                   alphaRTm, bRTm, rCRTm, TInAkk, Cnom, Rbin0p,
-                   Rbin0n, Rm0,
+                   nRQp, nRQn, alphaRQp / corrQp, alphaRQn / corrQn,
+                   nuLip, nuLin, alphaRTp, alphaRTn, bRTp, bRTn,
+                   rCRTp, rCRTn, alphaRTm, bRTm, rCRTm, TInAkk, Cnom,
+                   Rbin0p * corrRbinp, Rbin0n * corrRbinn, Rm0,
                    betaRI2p, betaRI2n, betaRI3p, betaRI3n,
                    betaRQ2p, betaRQ2n, betaRQ3p, betaRQ3n,
                    betaRT2p, betaRT2m, betaRT2n, betaRT3p,
                    betaRT3m, betaRT3n) / (TInAkk / NonEqSystemQBase.GetTbase())
+    [rbinp, rbinn, rm] = rAkk
+
+    # Определям кинетические коэффициенты активации и деградации
+    (kActp, kDegp) = funADNu(rNuActElp, TInAkk,
+                             muActp, muDegp,
+                             kActElp, kDegElp,
+                             betaADNuMat1p, betaADNuMat2p, betaADNuMat3p,
+                             betaADNuMatDeg1p, betaADNuMatDeg2p, betaADNuMatDeg3p)  # Положительный электрод
+    (kActn, kDegn) = funADNu(rNuActEln, TInAkk,
+                             muActn, muDegn,
+                             kActEln, kDegEln,
+                             betaADNuMat1n, betaADNuMat2n, betaADNuMat3n,
+                             betaADNuMatDeg1n, betaADNuMatDeg2n, betaADNuMatDeg3n)  # Отрицательный электрод
+
+    # Коэффициент деградации электродов
+    KDegEl= np.array([kDegp, kDegn], dtype=np.double)
+
+    # Коэффициент активации электродов
+    aActp = np.array([-aActElsp * np.sign(dissUbinp)], dtype=np.double)
+    aActn = np.array([-aActElsn * np.sign(dissUbinn)], dtype=np.double)
 
     # Коэффициенты теплообмена
     KQAkk = np.array([KInAkk * TInAkk, KBAkk * Tokr], dtype=np.double) * TBAkk / NonEqSystemQBase.GetTbase()
@@ -134,4 +223,7 @@ def IndepStateFunction(stateCoordinates,
     return (I, Tokr,
             heatStreambEnPow,
             JSq, JST, HSqT, HSTT,
-            rAkk, KQAkk)
+            rbinp, rbinn, rm,
+            aActp, aActn,
+            kActp, kActn,
+            KDegEl, KQAkk)

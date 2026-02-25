@@ -4,25 +4,50 @@ from .StationFunction import IndepStateFunction
 
 from MathProtEnergyProc.HeatPowerValues import IntPotentialsOne, HeatValuesOne
 
-from MathProtEnergyProc.CorrectionModel import PosLinearFilter
+from MathProtEnergyProc.CorrectionModel import PosLinearFilter, ReluFilter, KineticMatrixQ, KineticMatrixFromFacStreamEkvAff
 
 
 # Потенциалы взаимодействия в топливном элементе и камерах
-potentialInterAkk = IntPotentialsOne(["qbinp", "qm", "qbinn", "q"],  # Имена координат состояния
+potentialInterAkk = IntPotentialsOne(["qbinp", "qm", "qbinn", "q", "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln"],  # Имена координат состояния
                                      ["EnPowInAkk", "EnPowBAkk"],  # Имена энергетических степеней свободы
 
-                                     [     "qbinp",         "qm",      "qbinn",          "q"],  # Имена переменных потенциалов взаимодействия по координатам состояния
-                                     ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"]  # Имена переменных потенциалов взаимодействия по энергетическим степеням свободы
+                                     [     "qbinp",         "qm",      "qbinn",          "q",    "qMatElp",    "qMatEln", "qMatDegElp", "qMatDegEln"],  # Имена переменных потенциалов взаимодействия по координатам состояния
+                                     ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"]  # Имена переменных потенциалов взаимодействия по энергетическим степеням свободы
                                      )
 
 # Приведенные обратные теплоемкости и тепловые эффекты
-heatValuesAkk = HeatValuesOne(["qbinp", "qm", "qbinn", "q"],  # Имена координат состояния
+heatValuesAkk = HeatValuesOne(["qbinp", "qm", "qbinn", "q", "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln"],  # Имена координат состояния
                               ["EnPowInAkk", "EnPowBAkk"],  # Имена энергетических степеней свободы
           
                               ["EnPowInAkk", "EnPowBAkk"],  # Имена переменных коэффициентов обратных теплоемкостей по отношению к энергетическим степеням свободы
-                              ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"],  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
-                              [     "qbinp",         "qm",      "qbinn",          "q"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к координатам состояния
+                              ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"],  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
+                              [     "qbinp",         "qm",      "qbinn",          "q",    "qMatElp",    "qMatEln", "qMatDegElp", "qMatDegEln"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к координатам состояния
                               )
+
+
+# Кинетические матрицы по электродам
+kinMatrixElp = KineticMatrixQ(["dqbinp", "deactp", "deactp"],  # Имена сопряженностей между собой координат процессов
+                              ["dqbinp", "dqbinp", "deactp"],  # Имена сопряженностей между собой термодинамических сил
+                              [],  # Имена сопряженностей координат процессов с теплопереносами
+                              [],  # Имена сопряженностей термодинамических сил с теплопереносами
+                              [],  # Имена сопряженностей теплопереносов с координатами процессов
+                              [],  # Имена сопряженностей теплопереносов с термодинамическими силами
+                              [],  # Имена сопряженностей между собой перенесенных теплот
+                              [],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
+
+                              [["deactp", "dqbinp"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
+                              )  # Положительный электрод
+kinMatrixEln = KineticMatrixQ(["dqbinn", "deactn", "deactn"],  # Имена сопряженностей между собой координат процессов
+                              ["dqbinn", "dqbinn", "deactn"],  # Имена сопряженностей между собой термодинамических сил
+                              [],  # Имена сопряженностей координат процессов с теплопереносами
+                              [],  # Имена сопряженностей термодинамических сил с теплопереносами
+                              [],  # Имена сопряженностей теплопереносов с координатами процессов
+                              [],  # Имена сопряженностей теплопереносов с термодинамическими силами
+                              [],  # Имена сопряженностей между собой перенесенных теплот
+                              [],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
+
+                              [["deactn", "dqbinn"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
+                              )  # Отрицательный электрод
 
 
 # Функция состояния для литий-ионного аккумулятора
@@ -33,9 +58,12 @@ def StateFunction(stateCoordinates,
     (I, Tokr,
      heatStreambEnPow,
      JSq, JST, HSqT, HSTT,
-     rAkk, KQAkk) = IndepStateFunction(stateCoordinates,
-                                       reducedTemp,
-                                       systemParameters)
+     rbinp, rbinn, rm,
+     aActp, aActn,
+     kActp, kActn,
+     KDegEl, KQAkk) = IndepStateFunction(stateCoordinates,
+                                         reducedTemp,
+                                         systemParameters)
 
     # Матрица баланса
     balanceMatrix = np.array([])
@@ -58,15 +86,46 @@ def StateFunction(stateCoordinates,
     # Доли распределения некомпенсированной теплоты
     beta = np.array([])
 
+    # Кинетическая матрица положительного электрода
+    sbinp = np.array([[1 / PosLinearFilter(rbinp)]], dtype=np.double)
+    kMatrElp = KineticMatrixFromFacStreamEkvAff(ReluFilter(kActp),  # Необратимая составляющая кинетической матрицы
+                                                aActp.reshape(1,1),  # Коэффициенты увлечения потоков
+                                                np.zeros_like(aActp),  # Коэффициенты эквивалетность термодинаических сил
+                                                sbinp  # Блок кинетической матрицы
+                                                )
+    (kineticMatrixPCPCElp,
+     kineticMatrixPCHeatElp,
+     kineticMatrixHeatPCElp,
+     kineticMatrixHeatHeatElp) = kinMatrixElp([kMatrElp])
+
+    # Кинетическая матрица отрицательного электрода
+    sbinn = np.array([[1 / PosLinearFilter(rbinn)]], dtype=np.double)
+    kMatrEln = KineticMatrixFromFacStreamEkvAff(ReluFilter(kActn),  # Необратимая составляющая кинетической матрицы
+                                                aActn.reshape(1,1),  # Коэффициенты увлечения потоков
+                                                np.zeros_like(aActn),  # Коэффициенты эквивалетность термодинаических сил
+                                                sbinn  # Блок кинетической матрицы
+                                                )
+    (kineticMatrixPCPCEln,
+     kineticMatrixPCHeatEln,
+     kineticMatrixHeatPCEln,
+     kineticMatrixHeatHeatEln) = kinMatrixEln([kMatrEln])
+
     # Главный блок кинетической матрицы по процессам
-    kineticMatrixPCPC = 1 / PosLinearFilter(rAkk)
+    kineticMatrixPCPC = np.hstack([kineticMatrixPCPCElp,
+                                   kineticMatrixPCPCEln,
+                                   [1 / PosLinearFilter(rm)],
+                                   ReluFilter(KDegEl)])
 
     # Перекрестные блоки кинетической матрицы по процессам
-    kineticMatrixPCHeat = np.array([])
-    kineticMatrixHeatPC = np.array([])
+    kineticMatrixPCHeat = np.hstack([kineticMatrixPCHeatElp,
+                                     kineticMatrixPCHeatEln])
+    kineticMatrixHeatPC = np.hstack([kineticMatrixHeatPCElp,
+                                     kineticMatrixHeatPCEln])
 
     # Главный блок кинетической матрицы по теплообмену
-    kineticMatrixHeatHeat = PosLinearFilter(KQAkk)
+    kineticMatrixHeatHeat = np.hstack([kineticMatrixHeatHeatElp,
+                                       kineticMatrixHeatHeatEln,
+                                       ReluFilter(KQAkk)])
 
     # Обратная теплоемкость и приведенные тепловые эффекты литий-ионного аккумулятора
     (invHeatCapacityMatrixCf,  # Обратная теплоемкость водородно-воздушного топливного элемента
@@ -95,8 +154,8 @@ def StateFunction(stateCoordinates,
 # Функция структуры аккумулятора
 def StructureFunction():
     # Описываем структуру литий-ионного элемента
-    stateCoordinatesNames = ["qbinp", "qm", "qbinn", "q"]  # Имена координат состояния
-    processCoordinatesNames = ["dqbinp", "dqm", "dqbinn"]  # Имена координат процессов
+    stateCoordinatesNames = ["qbinp", "qm", "qbinn", "q", "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln"]  # Имена координат состояния
+    processCoordinatesNames = ["dqbinp", "dqm", "dqbinn", "deactp", "deactn", "degp", "degn"]  # Имена координат процессов
     energyPowersNames = ["EnPowInAkk", "EnPowBAkk", "EnPowOkr"]  # Имена энергетических степеней свободы
     reducedTemperaturesEnergyPowersNames = ["TInAkk", "TBAkk"]  # Имена приведенных температур энергетических степеней свободы
     energyPowersBetNames = []  # Имена взаимодействий между энергетическими степенями свободы
@@ -109,18 +168,18 @@ def StructureFunction():
     stateCoordinatesVarBalanceNames = []  # Имена переменных коэффициентов матрицы баланса по координатам состояния
     processCoordinatesVarBalanceNames = []  # Имена переменных коэффициентов матрицы баланса по координатам процессов
     energyPowersVarTemperatureNames = ["EnPowInAkk", "EnPowBAkk", "EnPowOkr"]  # Имена переменных температур энергетических степеней свободы
-    stateCoordinatesVarPotentialsInterNames = ["qbinp", "qm", "qbinn", "q"]  # Имена переменных потенциалов взаимодействия по координатам состояния
-    energyPowersVarPotentialsInterNames = ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"]  # Имена переменных потенциалов взаимодействия по энергетическим степеням свободы
+    stateCoordinatesVarPotentialsInterNames = ["qbinp", "qm", "qbinn", "q", "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln"]  # Имена переменных потенциалов взаимодействия по координатам состояния
+    energyPowersVarPotentialsInterNames = ["EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk", "EnPowInAkk"]  # Имена переменных потенциалов взаимодействия по энергетическим степеням свободы
     stateCoordinatesVarPotentialsInterBetNames = []  # Имена переменных потенциалов взаимодействия для взаимодействий между энергетическими степенями свободы по координатам состояния
     energyPowersVarPotentialsInterBetNames = []  # Имена переменных потенциалов взаимодействия для взаимодействий между энергетическими степенями свободы по энергетическим степеням свободы
     energyPowersVarBetaNames = []  # Имена переменных долей распределения некомпенсированной теплоты энергетических степеней свободы
     processCoordinatesVarBetaNames = []  # Имена переменных долей распределения некомпенсированной теплоты координат процессов
     reducedTemperaturesEnergyPowersVarInvHeatCapacityNames = ["TInAkk", "TBAkk"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
     energyPowersVarInvHeatCapacityNames = ["EnPowInAkk", "EnPowBAkk"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к энергетическим степеням свободы
-    reducedTemperaturesEnergyPowersVarHeatEffectNames = ["TInAkk", "TInAkk", "TInAkk", "TInAkk"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
-    stateCoordinatesVarHeatEffectNames = ["qbinp", "qm", "qbinn", "q"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к координатам состояния
-    varKineticPCPCNames = ["dqbinp", "dqm", "dqbinn"]  # Имена сопряженностей между собой координат процессов
-    varKineticPCPCAffNames = ["dqbinp", "dqm", "dqbinn"]  # Имена сопряженностей между собой термодинамических сил
+    reducedTemperaturesEnergyPowersVarHeatEffectNames = ["TInAkk", "TInAkk", "TInAkk", "TInAkk", "TInAkk", "TInAkk", "TInAkk", "TInAkk"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к приведенным температурам
+    stateCoordinatesVarHeatEffectNames = ["qbinp", "qm", "qbinn", "q", "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln"]  # Имена переменных коэффициентов обратных теплоемкостей по отношению к координатам состояния
+    varKineticPCPCNames = ["dqbinp", "deactp", "deactp", "dqbinn", "deactn", "deactn", "dqm", "degp", "degn"]  # Имена сопряженностей между собой координат процессов
+    varKineticPCPCAffNames = ["dqbinp", "dqbinp", "deactp", "dqbinn", "dqbinn", "deactn", "dqm", "degp", "degn"]  # Имена сопряженностей между собой термодинамических сил
     varKineticPCHeatNames = []  # Имена сопряженностей координат процессов с теплопереносами
     varKineticPCHeatAffNames = []  # Имена сопряженностей термодинамических сил с теплопереносами
     varKineticHeatPCNames = []  # Имена сопряженностей теплопереносов с координатами процессов
@@ -175,8 +234,16 @@ def ConstParametersFunction(sysStructure  # Структура системы
     sysStructure.SetBalanceStateCoordinatesConstElement("qbinp", "dqbinp", 1)
     sysStructure.SetBalanceStateCoordinatesConstElement("qm", "dqm", 1)
     sysStructure.SetBalanceStateCoordinatesConstElement("qbinn", "dqbinn", 1)
+    sysStructure.SetBalanceStateCoordinatesConstElement("qMatElp", "deactp", 1)
+    sysStructure.SetBalanceStateCoordinatesConstElement("qMatEln", "deactn", 1)
+    sysStructure.SetBalanceStateCoordinatesConstElement("qMatDegElp", "degp", 1)
+    sysStructure.SetBalanceStateCoordinatesConstElement("qMatDegEln", "degn", 1)
 
     # Задаем доли распределения некомпенсированной теплоты
     sysStructure.SetBetaConstElement("EnPowInAkk", "dqbinp", 1.0)
     sysStructure.SetBetaConstElement("EnPowInAkk", "dqm", 1.0)
     sysStructure.SetBetaConstElement("EnPowInAkk", "dqbinn", 1.0)
+    sysStructure.SetBetaConstElement("EnPowInAkk", "deactp", 1.0)
+    sysStructure.SetBetaConstElement("EnPowInAkk", "deactn", 1.0)
+    sysStructure.SetBetaConstElement("EnPowInAkk", "degp", 1.0)
+    sysStructure.SetBetaConstElement("EnPowInAkk", "degn", 1.0)

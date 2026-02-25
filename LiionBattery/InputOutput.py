@@ -63,17 +63,11 @@ def InputArrayCreate(Pars,  # Параметры
         Pars.loc[bIndNonCeilMax["nuNonCeilp"].to_numpy(), "nuNonCeilp"] = 100
         Pars.loc[bIndNonCeilMax["nuNonCeiln"].to_numpy(), "nuNonCeiln"] = 100
     Pars[nonCeilNames] /= 100
-    Pars[nonCeilNames] /= 1 - Pars[nonCeilNames]
 
-    # Корректируем сопротивления двойных слоев
-    nonCeil = 1 + ReluFilter(Pars[["betaNonCeilp1", "betaNonCeiln1"]].to_numpy() * Pars[nonCeilNames].to_numpy() + \
-                             Pars[["betaNonCeilp2", "betaNonCeiln2"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 2) + \
-                             Pars[["betaNonCeilp3", "betaNonCeiln3"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 3))
-    nonCeilQ = 1 + ReluFilter(Pars[["betaNonCeilQp1", "betaNonCeilQn1"]].to_numpy() * Pars[nonCeilNames].to_numpy() + \
-                              Pars[["betaNonCeilQp2", "betaNonCeilQn2"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 2) + \
-                              Pars[["betaNonCeilQp3", "betaNonCeilQn3"]].to_numpy() * np.power(Pars[nonCeilNames].to_numpy(), 3))
-    Pars[["Rbin0p", "Rbin0n"]] *= nonCeil
-    Pars[["alphaRQp", "alphaRQn"]] /= nonCeilQ
+    # Начальные числа молей деградированных и недеградированных материалов электродов
+    Pars[["qMatAllp", "qMatAlln"]] = Pars[["cMatAllp", "cMatAlln"]].to_numpy() * Pars[["Cnom"]].to_numpy()
+    Pars[["qMatDegElp", "qMatDegEln"]] = Pars[nonCeilNames].to_numpy() * Pars[["qMatAllp", "qMatAlln"]].to_numpy()
+    Pars[["qMatElp", "qMatEln"]] = Pars[["qMatAllp", "qMatAlln"]].to_numpy() - Pars[["qMatDegElp", "qMatDegEln"]].to_numpy()
 
     # Начальное состояние
     Pars["qbinp0"] *= Pars["EbinpC"] * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
@@ -166,6 +160,18 @@ def InputArrayCreate(Pars,  # Параметры
                              "rCRTn",  # Постоянный коэффициент температурной зависимости отрицательного электрода
                              "alphaCQp",  # Зарядовый коэффициент емкости положительного электрода, 1/Кл
                              "alphaCQn",  # Зарядовый коэффициент емкости отрицательного электрода, 1/Кл
+                             "qMatAllp",  # Общее зарядовое число молей материала положительного электрода, Кл
+                             "qMatAlln",  # Общее зарядовое число молей материала отрицательного электрода, Кл
+                             "muActsp",  # Зарядовый потенциал деградационной активации положительного электрода, В
+                             "muActsn",  # Зарядовый потенциал деградационной активации отрицательного электрода, В
+                             "bMuDegp",  # Зарядовый потенциал деградационного порога положительного электрода, В
+                             "bMuDegn",  # Зарядовый потенциал деградационного порога отрицательного электрода, В
+                             "kActElp",  # Коэффициент активации положительного электрода, См
+                             "kActEln",  # Коэффициент активации отрицательного электрода, См
+                             "kDegElp",  # Коэффициент деградации положительного электрода, См
+                             "kDegEln",  # Коэффициент деградации отрицательного электрода, См
+                             "aActElsp",  # Коэффиицент токовой активации положительного электрода
+                             "aActElsn",  # Коэффиицент токовой активации отрицательного электрода
 
                              "betaRI2p",
                              "betaRI2n",
@@ -189,12 +195,41 @@ def InputArrayCreate(Pars,  # Параметры
                              "betaEQ2n",
                              "betaEQ3p",
                              "betaEQ3n",
+                             "betaMuAct2p",
+                             "betaMuAct2n",
+                             "betaMuAct3p",
+                             "betaMuAct3n",
+                             "betaNonCeilp1",
+                             "betaNonCeiln1",
+                             "betaNonCeilp2",
+                             "betaNonCeiln2",
+                             "betaNonCeilp3",
+                             "betaNonCeiln3",
+                             "betaNonCeilQp1",
+                             "betaNonCeilQn1",
+                             "betaNonCeilQp2",
+                             "betaNonCeilQn2",
+                             "betaNonCeilQp3",
+                             "betaNonCeilQn3",
+                             "betaADNuMat1p",
+                             "betaADNuMat1n",
+                             "betaADNuMat2p",
+                             "betaADNuMat2n",
+                             "betaADNuMat3p",
+                             "betaADNuMat3n",
+                             "betaADNuMatDeg1p",
+                             "betaADNuMatDeg1n",
+                             "betaADNuMatDeg2p",
+                             "betaADNuMatDeg2n",
+                             "betaADNuMatDeg3p",
+                             "betaADNuMatDeg3n",
 
                              "Rkl"
                              ]].to_numpy()
 
     # Массив начальных состояний
-    stateCoordinates0 = Pars[["qbinp0", "qm0", "qbinn0", "q0"]].to_numpy()
+    stateCoordinates0 = Pars[["qbinp0", "qm0", "qbinn0", "q0",
+                              "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln"]].to_numpy()
     reducedTemp0 = Pars[["TInAkk0", "TBAkk0"]].to_numpy()
 
     #  Моменты времени
@@ -218,7 +253,8 @@ def OutputValues(dyns, fileName,
                  ):
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
-     TInAkk, TBAkk, q, Icur, Tokr) = dyns
+     TInAkk, TBAkk, q, Icur, Tokr,
+     qMatElp, qMatEln, qMatDegElp, qMatDegEln) = dyns
 
     # Заголовки и динамики
     dynamicsHeaders = {"Time": t.reshape(-1,),
@@ -230,37 +266,51 @@ def OutputValues(dyns, fileName,
                        "TBAkk": TBAkk.reshape(-1,),
                        "q": q.reshape(-1,),
                        "Icur": Icur.reshape(-1,),
-                       "Tokr": Tokr.reshape(-1,)
+                       "Tokr": Tokr.reshape(-1,),
+                       "qMatElp": qMatElp.reshape(-1,),
+                       "qMatEln": qMatEln.reshape(-1,),
+                       "qMatDegElp": qMatDegElp.reshape(-1,),
+                       "qMatDegEln": qMatDegEln.reshape(-1,)
                        }
 
     # Одиночные графики на полотне
     oneTimeValueGraphics = [{"values": Ukl,  # Величины в моменты времени
                              "graphName": "Напряжение на клеммах",  # Имя полотна
-                             "yAxesName": "Напряжение, В",  # Имя оси ординат
-                             "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                             "yAxesName": "Напряжение, В"  # Имя оси ординат
                              },
 
                             {"values": Icur,  # Величины в моменты времени
                              "graphName": "Ток в цепи",  # Имя полотна
-                             "yAxesName": "Ток, Cnom",  # Имя оси ординат
-                             "graphFileBaseName": "AkkCurrent"  # Имя файла графика
+                             "yAxesName": "Ток, Cnom"  # Имя оси ординат
                              }]
 
     # Группы графиков на полотне
     timesValuesGraphics = [{"listValues": [TInAkk, TBAkk],  # Список величин в моменты времени
-                            "listValuesNames": ["Содержимое", "Корпус"],  # Список имен величин (в моменты времени)
+                            "listValuesNames": ["Содержимое", "Корпус"], # Список имен величин (в моменты времени)
                             "graphName": "Температура в литий-ионном аккумуляторе",  # Имя полотна
-                            "yAxesName": "Температура, град С",  # Имя оси
-                            "graphFileBaseName": "AkkTemperature"  # Имя файла графика
+                            "yAxesName": "Температура, град С"  # Имя оси
                             },
 
                            {"listValues": [Ubinn, Ubinp, Um],  # Список величин в моменты времени
                             "listValuesNames": ["Отрицательный двойной слой",
                                                 "Положительный двойной слой",
-                                                "Мембрана"],  # Список имен величин (в моменты времени)
+                                                "Мембрана"], # Список имен величин (в моменты времени)
                             "graphName": "Напряжения в литий-ионном аккумуляторе",  # Имя полотна
-                            "yAxesName": "Напряжение, В",  # Имя оси
-                            "graphFileBaseName": "InAkkVoltage"  # Имя файла графика
+                            "yAxesName": "Напряжение, В"  # Имя оси
+                            },
+
+                           {"listValues": [qMatElp, qMatDegElp],  # Список величин в моменты времени
+                            "listValuesNames": ["Недеградированный материал",
+                                                "Деградированный материал"], # Список имен величин (в моменты времени)
+                            "graphName": "Материалы положительного электрода",  # Имя полотна
+                            "yAxesName": "Зарядовое число молей"  # Имя оси
+                            },
+
+                           {"listValues": [qMatEln, qMatDegEln],  # Список величин в моменты времени
+                            "listValuesNames": ["Недеградированный материал",
+                                                "Деградированный материал"], # Список имен величин (в моменты времени)
+                            "graphName": "Материалы отрицательного электрода",  # Имя полотна
+                            "yAxesName": "Зарядовое число молей"  # Имя оси
                             }]
 
     # Сохраняем динамику в .csv файл и отображаем графики

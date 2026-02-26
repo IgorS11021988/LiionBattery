@@ -188,3 +188,22 @@ def funCf0(rNuMatDeg, rNuMatAll,
     
     # Рассчитываем корректировочный коэффициент
     return 1 + ReluFilter(betaNonCeil1 * rrNuMatDeg + betaNonCeil2 * np.power(rrNuMatDeg, 2) + betaNonCeil3 * np.power(rrNuMatDeg, 3))
+
+
+def funKDDegPosEl(nuLip, rMuDegPos, TInAkk,
+                  Cnom, rMuDegPoss, kDDegps,
+                  betaMuDegPos1, betaMuDegPos2, betaMuDegPos3,
+                  betaNuLiDegPos1, betaNuLiDegPos2, betaNuLiDegPos3):
+    # Определяем вентильный коэффициент
+    cVen = (1 + np.sign(rMuDegPos)) / 2
+
+    # Определяем корректировку по результирующему потенциалу
+    rrMuDegPos = rMuDegPos / rMuDegPoss  # Относительный результирующий потенциал
+    crMu = 1 + betaMuDegPos1 * rrMuDegPos + betaMuDegPos2 * np.power(rrMuDegPos, 2) + betaMuDegPos3 * np.power(rrMuDegPos, 3)
+
+    # Определяем корректировку по числу молей недеградированного материала электрода
+    rNuLip = nuLip / Cnom  # Относительное зарядовое число молей интеркалированных в положительный электрод ионов лития
+    crNuLip = betaNuLiDegPos1 * rNuLip + betaNuLiDegPos2 * np.power(rNuLip, 2) + betaNuLiDegPos3 * np.power(rNuLip, 3)
+
+    # Получаем и выводим результат
+    return kDDegps * cVen * crMu * crNuLip

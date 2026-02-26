@@ -25,6 +25,7 @@ def CharacteristicsFunction(t,  # Моменты времени
     qMatEln = stateCoordinates[:, 5]  # Зарядовое сило молей недеградированного отрицательного электрода
     qMatDegElp = stateCoordinates[:, 6]  # Зарядовое сило молей деградированного положительного электрода
     qMatDegEln = stateCoordinates[:, 7]  # Зарядовое сило молей деградированного отрицательного электрода
+    qDegPosEl = stateCoordinates[:, 8]  # Зарядовое сило молей разрушенного положительного электрода
 
     # Температура содержимого аккумулятора
     TInAkk = reducedTemp[:, 0] - 273.15
@@ -45,10 +46,10 @@ def CharacteristicsFunction(t,  # Моменты времени
     qMatAlln = otherSystemParameters[36]  # Общее зарядовое число молей материала отрицательного электрода
 
     # Получаем довесочные коэффициенты
-    betaCQ2p = otherSystemParameters[73]
-    betaCQ2n = otherSystemParameters[74]
-    betaCQ3p = otherSystemParameters[75]
-    betaCQ3n = otherSystemParameters[76]
+    betaCQ2p = otherSystemParameters[75]
+    betaCQ2n = otherSystemParameters[76]
+    betaCQ3p = otherSystemParameters[77]
+    betaCQ3n = otherSystemParameters[78]
 
     # Получаем сопротивление клемм
     Rkl = otherSystemParameters[-1]
@@ -66,4 +67,4 @@ def CharacteristicsFunction(t,  # Моменты времени
     Ukl = Ubinp + Um + Ubinn - Icur * Rkl
     return (t, Ukl, Ubinp, Ubinn, Um, TInAkk, TBAkk, q / Cnom, Icur * 3600 / Cnom, Tokr,
             qMatElp / qMatAllp, qMatEln / qMatAlln,
-            qMatDegElp / qMatAllp, qMatDegEln / qMatAlln)
+            qMatDegElp / qMatAllp, qMatDegEln / qMatAlln, qDegPosEl / qMatAllp)

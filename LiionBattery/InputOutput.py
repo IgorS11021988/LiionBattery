@@ -64,10 +64,28 @@ def InputArrayCreate(Pars,  # Параметры
         Pars.loc[bIndNonCeilMax["nuNonCeiln"].to_numpy(), "nuNonCeiln"] = 100
     Pars[nonCeilNames] /= 100
 
-    # Начальные числа молей деградированных и недеградированных материалов электродов
+    # Корректируем долю разрушенного положительного электрода
+    bIndNuDegPosElMin = (Pars["nuDegPosEl"] < 0).to_numpy()
+    if np.any(bIndNuDegPosElMin):
+        Pars.loc[bIndNuDegPosElMin, "nuDegPosEl"] = 0
+    bIndNuDegPosElMax = (Pars["nuDegPosEl"] > 100).to_numpy()
+    if np.any(bIndNuDegPosElMax):
+        Pars.loc[bIndNuDegPosElMax, "nuDegPosEl"] = 100
+    Pars["nuDegPosEl"] /= 100
+
+    # Полные зарядовые числа молей электродов
     Pars[["qMatAllp", "qMatAlln"]] = Pars[["cMatAllp", "cMatAlln"]].to_numpy() * Pars[["Cnom"]].to_numpy()
-    Pars[["qMatDegElp", "qMatDegEln"]] = Pars[nonCeilNames].to_numpy() * Pars[["qMatAllp", "qMatAlln"]].to_numpy()
-    Pars[["qMatElp", "qMatEln"]] = Pars[["qMatAllp", "qMatAlln"]].to_numpy() - Pars[["qMatDegElp", "qMatDegEln"]].to_numpy()
+
+    # Число молей неразрушенного положительного электрода
+    Pars["qNoDegPosEl"] = Pars["qMatAllp"].to_numpy() * (1 - Pars["nuDegPosEl"].to_numpy())
+
+    # Начальные числа молей деградированных и недеградированных материалов электродов
+    Pars["qDegPosEl"] = Pars["qMatAllp"].to_numpy() * Pars["nuDegPosEl"].to_numpy()
+    Pars[["qMatDegElp", "qMatDegEln"]] = Pars[nonCeilNames].to_numpy() * Pars[["qNoDegPosEl", "qMatAlln"]].to_numpy()
+    Pars[["qMatElp", "qMatEln"]] = Pars[["qNoDegPosEl", "qMatAlln"]].to_numpy() - Pars[["qMatDegElp", "qMatDegEln"]].to_numpy()
+
+    # Удаляем зарядовое число молей неразрушенного положительного электрода
+    Pars.drop(columns = ["qNoDegPosEl"], axis=1, inplace=True)
 
     # Начальное состояние
     Pars["qbinp0"] *= Pars["EbinpC"] * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
@@ -172,6 +190,8 @@ def InputArrayCreate(Pars,  # Параметры
                              "kDegEln",  # Коэффициент деградации отрицательного электрода, См
                              "aActElsp",  # Коэффиицент токовой активации положительного электрода
                              "aActElsn",  # Коэффиицент токовой активации отрицательного электрода
+                             "bMuDegPosEl",  # Барьерный потенциал начала разрушения положительного электрода при переразрядке, В
+                             "kDDegps",  # Коэффициент разрушения положительного электрода при перезарядке, Ом
 
                              "betaRI2p",
                              "betaRI2n",
@@ -223,13 +243,20 @@ def InputArrayCreate(Pars,  # Параметры
                              "betaADNuMatDeg2n",
                              "betaADNuMatDeg3p",
                              "betaADNuMatDeg3n",
+                             "betaMuDegPos1",
+                             "betaMuDegPos2",
+                             "betaMuDegPos3",
+                             "betaNuLiDegPos1",
+                             "betaNuLiDegPos2",
+                             "betaNuLiDegPos3",
 
                              "Rkl"
                              ]].to_numpy()
 
     # Массив начальных состояний
     stateCoordinates0 = Pars[["qbinp0", "qm0", "qbinn0", "q0",
-                              "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln"]].to_numpy()
+                              "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln",
+                              "qDegPosEl"]].to_numpy()
     reducedTemp0 = Pars[["TInAkk0", "TBAkk0"]].to_numpy()
 
     #  Моменты времени
@@ -254,7 +281,8 @@ def OutputValues(dyns, fileName,
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
      TInAkk, TBAkk, q, Icur, Tokr,
-     qMatElp, qMatEln, qMatDegElp, qMatDegEln) = dyns
+     qMatElp, qMatEln,
+     qMatDegElp, qMatDegEln, qDegPosEl) = dyns
 
     # Заголовки и динамики
     dynamicsHeaders = {"Time": t.reshape(-1,),
@@ -270,7 +298,8 @@ def OutputValues(dyns, fileName,
                        "qMatElp": qMatElp.reshape(-1,),
                        "qMatEln": qMatEln.reshape(-1,),
                        "qMatDegElp": qMatDegElp.reshape(-1,),
-                       "qMatDegEln": qMatDegEln.reshape(-1,)
+                       "qMatDegEln": qMatDegEln.reshape(-1,),
+                       "qDegPosEl": qDegPosEl.reshape(-1,)
                        }
 
     # Одиночные графики на полотне
@@ -284,6 +313,12 @@ def OutputValues(dyns, fileName,
                              "graphName": "Ток в цепи",  # Имя полотна
                              "yAxesName": "Ток, Cnom",  # Имя оси ординат
                              "graphFileBaseName": "AkkCurrent"  # Имя файла графика
+                             },
+
+                            {"values": qDegPosEl,  # Величины в моменты времени
+                             "graphName": "Зарядовое число молей разрушенного положительного электрода",  # Имя полотна
+                             "yAxesName": "Зарядовое число молей",  # Имя оси ординат
+                             "graphFileBaseName": "AkkDegPosEl"  # Имя файла графика
                              }]
 
     # Группы графиков на полотне

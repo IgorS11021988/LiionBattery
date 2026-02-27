@@ -185,7 +185,7 @@ def funCf0(rNuMatDeg, rNuMatAll,
            betaNonCeil1, betaNonCeil2, betaNonCeil3):
     # Рассчитываем приведенное число молей деградированного материала
     rrNuMatDeg = rNuMatDeg / (rNuMatAll - rNuMatDeg)
-    
+
     # Рассчитываем корректировочный коэффициент
     return 1 + ReluFilter(betaNonCeil1 * rrNuMatDeg + betaNonCeil2 * np.power(rrNuMatDeg, 2) + betaNonCeil3 * np.power(rrNuMatDeg, 3))
 

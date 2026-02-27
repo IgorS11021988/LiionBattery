@@ -83,7 +83,7 @@ def InputArrayCreate(Pars,  # Параметры
     Pars[["qMatElp", "qMatEln"]] = Pars[["qNoDegPosEl", "qMatAlln"]].to_numpy() - Pars[["qMatDegElp", "qMatDegEln"]].to_numpy()
 
     # Удаляем зарядовое число молей неразрушенного положительного электрода
-    Pars.drop(columns=["qNoDegPosEl"], axis=1, inplace=True)
+    Pars.drop(columns = ["qNoDegPosEl"], axis=1, inplace=True)
 
     # Начальное состояние
     Pars["qbinp0"] *= Pars["EbinpC"] * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл

@@ -227,7 +227,7 @@ def IndepStateFunction(stateCoordinates,
                            betaNuLiDegPos1, betaNuLiDegPos2, betaNuLiDegPos3)
 
     # Коэффициент деградации электродов
-    KDegEl= np.array([kDegp, kDegn, kDDegp], dtype=np.double)
+    KDegEl = np.array([kDegp, kDegn, kDDegp], dtype=np.double)
 
     # Коэффициент активации электродов
     aActp = np.array([-aActElsp * np.sign(dissUbinp)], dtype=np.double)

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .StationFunctions import funEbin, funCbin
+from .StationFunctions import funCbin
 from .fICharge import fICharge
 
 

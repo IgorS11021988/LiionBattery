@@ -116,6 +116,7 @@ def StructureFunction():
                                                     np.zeros_like(aActp),  # Коэффициенты эквивалетность термодинаических сил
                                                     sbinp  # Блок кинетической матрицы
                                                     )
+                                                   
 
         # Кинетическая матрица отрицательного электрода
         sbinn = np.array([[1 / PosLinearFilter(rbinn)]], dtype=np.double)
@@ -124,13 +125,13 @@ def StructureFunction():
                                                     np.zeros_like(aActn),  # Коэффициенты эквивалетность термодинаических сил
                                                     sbinn  # Блок кинетической матрицы
                                                     )
-
-        # Кинетическая матрица литийионного аккумулятора
+        
+        # Кинетическая матрица аккумулятора
         (kineticMatrixPCPC,
          kineticMatrixPCHeat,
          kineticMatrixHeatPC,
-         kineticMatrixHeatHeat) = kinMatrixEl([kMatrEln,
-                                               kMatrElp])
+         kineticMatrixHeatHeat) = kinMatrixEl([kMatrElp,
+                                               kMatrEln])
 
         # Главный блок кинетической матрицы по процессам
         kineticMatrixPCPC = np.hstack([kineticMatrixPCPC,

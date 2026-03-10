@@ -62,28 +62,18 @@ def StructureFunction():
                                   )
 
     # Кинетические матрицы по электродам
-    kinMatrixElp = KineticMatrixQ(["dqbinp", "deactp", "deactp"],  # Имена сопряженностей между собой координат процессов
-                                  ["dqbinp", "dqbinp", "deactp"],  # Имена сопряженностей между собой термодинамических сил
-                                  [],  # Имена сопряженностей координат процессов с теплопереносами
-                                  [],  # Имена сопряженностей термодинамических сил с теплопереносами
-                                  [],  # Имена сопряженностей теплопереносов с координатами процессов
-                                  [],  # Имена сопряженностей теплопереносов с термодинамическими силами
-                                  [],  # Имена сопряженностей между собой перенесенных теплот
-                                  [],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
+    kinMatrixEl = KineticMatrixQ(["dqbinp", "deactp", "deactp", "dqbinn", "deactn", "deactn"],  # Имена сопряженностей между собой координат процессов
+                                 ["dqbinp", "dqbinp", "deactp", "dqbinn", "dqbinn", "deactn"],  # Имена сопряженностей между собой термодинамических сил
+                                 [],  # Имена сопряженностей координат процессов с теплопереносами
+                                 [],  # Имена сопряженностей термодинамических сил с теплопереносами
+                                 [],  # Имена сопряженностей теплопереносов с координатами процессов
+                                 [],  # Имена сопряженностей теплопереносов с термодинамическими силами
+                                 [],  # Имена сопряженностей между собой перенесенных теплот
+                                 [],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
 
-                                  [["deactp", "dqbinp"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
-                                  )  # Положительный электрод
-    kinMatrixEln = KineticMatrixQ(["dqbinn", "deactn", "deactn"],  # Имена сопряженностей между собой координат процессов
-                                  ["dqbinn", "dqbinn", "deactn"],  # Имена сопряженностей между собой термодинамических сил
-                                  [],  # Имена сопряженностей координат процессов с теплопереносами
-                                  [],  # Имена сопряженностей термодинамических сил с теплопереносами
-                                  [],  # Имена сопряженностей теплопереносов с координатами процессов
-                                  [],  # Имена сопряженностей теплопереносов с термодинамическими силами
-                                  [],  # Имена сопряженностей между собой перенесенных теплот
-                                  [],  # Имена сопряженностей между собой термодинамических сил по переносу теплот
-
-                                  [["deactn", "dqbinn"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
-                                  )  # Отрицательный электрод
+                                 [["deactp", "dqbinp"],
+                                  ["deactn", "dqbinn"]]  # Массив массивов имен координат процессов (в том числе и перенесенных теплот) по кинетической матрице
+                                 )
 
     # Функция состояния для литий-ионного аккумулятора
     def StateFunction(stateCoordinates,
@@ -126,10 +116,6 @@ def StructureFunction():
                                                     np.zeros_like(aActp),  # Коэффициенты эквивалетность термодинаических сил
                                                     sbinp  # Блок кинетической матрицы
                                                     )
-        (kineticMatrixPCPCElp,
-         kineticMatrixPCHeatElp,
-         kineticMatrixHeatPCElp,
-         kineticMatrixHeatHeatElp) = kinMatrixElp([kMatrElp])
 
         # Кинетическая матрица отрицательного электрода
         sbinn = np.array([[1 / PosLinearFilter(rbinn)]], dtype=np.double)
@@ -138,26 +124,21 @@ def StructureFunction():
                                                     np.zeros_like(aActn),  # Коэффициенты эквивалетность термодинаических сил
                                                     sbinn  # Блок кинетической матрицы
                                                     )
-        (kineticMatrixPCPCEln,
-         kineticMatrixPCHeatEln,
-         kineticMatrixHeatPCEln,
-         kineticMatrixHeatHeatEln) = kinMatrixEln([kMatrEln])
+
+        # Кинетическая матрица литийионного аккумулятора
+        (kineticMatrixPCPC,
+         kineticMatrixPCHeat,
+         kineticMatrixHeatPC,
+         kineticMatrixHeatHeat) = kinMatrixEl([kMatrEln,
+                                               kMatrElp])
 
         # Главный блок кинетической матрицы по процессам
-        kineticMatrixPCPC = np.hstack([kineticMatrixPCPCElp,
-                                       kineticMatrixPCPCEln,
+        kineticMatrixPCPC = np.hstack([kineticMatrixPCPC,
                                        [1 / PosLinearFilter(rm)],
                                        ReluFilter(KDegEl)])
 
-        # Перекрестные блоки кинетической матрицы по процессам
-        kineticMatrixPCHeat = np.hstack([kineticMatrixPCHeatElp,
-                                         kineticMatrixPCHeatEln])
-        kineticMatrixHeatPC = np.hstack([kineticMatrixHeatPCElp,
-                                         kineticMatrixHeatPCEln])
-
         # Главный блок кинетической матрицы по теплообмену
-        kineticMatrixHeatHeat = np.hstack([kineticMatrixHeatHeatElp,
-                                           kineticMatrixHeatHeatEln,
+        kineticMatrixHeatHeat = np.hstack([kineticMatrixHeatHeat,
                                            ReluFilter(KQAkk)])
 
         # Обратная теплоемкость и приведенные тепловые эффекты литий-ионного аккумулятора

@@ -4,13 +4,16 @@ from MathProtEnergyProcSynDatas.TimesMoments import LinearTimesMoments
 from MathProtEnergyProcSynDatas.Indicate import PlotGraphicIndicate, SaveDynamicToFileIndicate
 from MathProtEnergyProcSynDatas.File import DynamicSaveAndSaveGraphics
 
+from .fU import UParametersSystemParametersNames, otherSystemParametersNames
+from .StationFunction import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
+
 
 # Функция расчета динамики
 def InputArrayCreate(Pars,  # Параметры
 
                      integrateAttributes  # Аттрибуты интегрирования
                      ):  # Формирование массивов входных параметров
-    # Корректируем аттрибуты токов
+    # Корректируем токи во внешней цепи их аттрибуты
     Pars[["I",  # Ток во внешней цепи
           "IStepDischarge",  # Ток разряда после ступеньки, Cnom
           "AI"  # Амплитуда колебаний тока во внешней цепи
@@ -86,15 +89,15 @@ def InputArrayCreate(Pars,  # Параметры
     Pars.drop(columns=["qNoDegPosEl"], axis=1, inplace=True)
 
     # Начальное состояние
-    Pars["qbinp0"] *= Pars["EbinpC"] * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
-    Pars["qm0"] *= rCnom  # Заряд мембраны, Кл
-    Pars["qbinn0"] *= Pars["EbinnC"] * Pars["Cbin0n"]  # Заряд на отрицательном двойном слое, Кл
-    Pars["q0"] *= Pars["Cnom"]  # Перенесенный через внешнюю цепь заряд, Кл
-    Pars["TInAkk0"] += Pars["Tokr"]  # Начальная температура сождержимого литий-ионного элемента, град С
-    Pars["TBAkk0"] += Pars["Tokr"]  # Начальная температура корпуса литий-ионного элемента, град С
+    Pars["qbinp"] *= Pars["EbinpC"] * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
+    Pars["qm"] *= rCnom  # Заряд мембраны, Кл
+    Pars["qbinn"] *= Pars["EbinnC"] * Pars["Cbin0n"]  # Заряд на отрицательном двойном слое, Кл
+    Pars["q"] *= Pars["Cnom"]  # Перенесенный через внешнюю цепь заряд, Кл
+    Pars["TInAkk"] += Pars["Tokr"]  # Начальная температура сождержимого литий-ионного элемента, град С
+    Pars["TBAkk"] += Pars["Tokr"]  # Начальная температура корпуса литий-ионного элемента, град С
 
     # Корректируем температуры
-    Pars[["TInAkk0", "TBAkk0", "Tokr", "bRTp", "bRTm", "bRTn"]] += 273.15
+    Pars[["TInAkk", "TBAkk", "Tokr", "bRTp", "bRTm", "bRTn"]] += 273.15
 
     # Время интегрирования
     Tints = np.array(integrateAttributes["TintI0"], dtype=np.double)  # Времена интегрирования при нулевых токах
@@ -105,7 +108,7 @@ def InputArrayCreate(Pars,  # Параметры
         sc = (np.abs(sI) + sI) / 2  # При заряде 0, при разряде 1
         sd = (np.abs(sI) - sI) / 2  # При заряде 1, при разряде 0
         IZeros = 1.011 * np.abs(Pars["I"][bIZeros])  # Ненулевой ток (по модулю)
-        Tints[bIZeros] = ((Pars["Cnom"][bIZeros] - Pars["q0"][bIZeros]) * sc + Pars["q0"][bIZeros] * sd * integrateAttributes["cTimeCharge"]) / IZeros  # Время интегрирования
+        Tints[bIZeros] = ((Pars["Cnom"][bIZeros] - Pars["q"][bIZeros]) * sc + Pars["q"][bIZeros] * sd * integrateAttributes["cTimeCharge"]) / IZeros  # Время интегрирования
 
     # Время начала конца заряда
     Pars["cTIStep"] = np.array(Pars["cTIStep"], dtype=np.double).reshape(-1,)  # Приводим коэффициент времени ступенчатого перехода к массиву
@@ -121,7 +124,7 @@ def InputArrayCreate(Pars,  # Параметры
 
             if np.any(bIZeros):
                 # Оставшийся заряд
-                cqost = Pars["Cnom"][bIZeros] - Pars["q0"][bIZeros] - Pars["I"][bIZeros] * Pars["cTIStep"][bIZeros]
+                cqost = Pars["Cnom"][bIZeros] - Pars["q"][bIZeros] - Pars["I"][bIZeros] * Pars["cTIStep"][bIZeros]
 
                 # Времена интегрирования
                 IStepZeros = 1.011 * np.abs(Pars["IStepDischarge"][bIZeros])  # Ненулевой ток (по модулю)
@@ -131,131 +134,12 @@ def InputArrayCreate(Pars,  # Параметры
     Pars["cTauEndCharge"] *= Tints
 
     # Массив параметров
-    systemParameters = Pars[["I",  # Ток во внешней цепи, А
-                             "IStepDischarge",  # Ток разряда после ступеньки, А
-                             "fI",  # Частота колебаний внешнего тока, Гц
-                             "AI",  # Амплитуда колебаний тока во внешней цепи, А
-                             "fosI",  # Частота качания частоты колебаний внешнего тока, Гц
-                             "AosI",  # Амплитуда качания частоты колебаний тока во внешней цепи, Гц
-                             "cTIStep",  # Время начала конца заряда
-                             "cTauEndCharge",  # Постоянная времени конца заряда
-                             "alphaEndCharge",  # Экспоненциальный коэффициент постоянной времени разряда
-                             "powEndCharge",  # Степень постоянной времени разряда
-                             "Tokr",  # Температура окружающей среды, град С
-                             "EbinpC",  # ЭДС положительного двойного слоя в заряженном состоянии, В
-                             "EbinnC",  # ЭДС отрицательного двойного слоя в заряженном состоянии, В
-                             "EbinpD",  # ЭДС положительного двойного слоя в разряженном состоянии, В
-                             "EbinnD",  # ЭДС отрицательного двойного слоя в разряженном состоянии, В
-                             "Cbin0p",  # Емкость положительного двойного слоя, Ф
-                             "Cm",  # Емкость мембраны, Ф
-                             "Cbin0n",  # Емкость отрицательного двойного слоя, Ф
-                             "Rbin0p",  # Сопротивление положительного двойного слоя, Ом
-                             "Rm0",  # Сопротивление мембраны, Ом
-                             "Rbin0n",  # Сопротивление отрицательного двойного слоя, Ом
-                             "KInAkk",  # Коэффициент теплопередачи литий-ионного элемента, Вт/К
-                             "CInAkk",  # Теплоемкость литий-ионного элемента, Дж/К
-                             "KBAkk",  # Коэффициент теплоотдачи корпуса литий-ионного элемента, Вт/К
-                             "CBAkk",  # Теплоемкость корпуса литий-ионного элемента, Дж/К
-                             "Cnom",  # Номинальная емкость элемента, А*ч
-                             "rLiEpE",  # Приведенное зарядовое число положительного электрода
-                             "rLiEnE",  # Приведенное зарядовое число отрицательного электрода
-                             "alphaRIp",  # Коэффициент сопротивления по току положительного двойного слоя, 1/В
-                             "alphaRIn",  # Коэффициент сопротивления по току отрицательного двойного слоя, 1/В
-                             "alphaRQp",  # Коэффициент сопротивления по перенесенному через внешнюю цепь заряду положительного двойного слоя
-                             "alphaRQn",  # Коэффициент сопротивления по перенесенному через внешнюю цепь заряду отрицательного двойного слоя
-                             "nRQp",  # Степенной коэффициент сопротивления по перенесенному через внешнюю цепь заряду положительного двойного слоя
-                             "nRQn",  # Степенной коэффициент сопротивления по перенесенному через внешнюю цепь заряду отрицательного двойного слоя
-                             "alphaRTp",  # Экспоненциальный коэффициент сопротивления по температуре положительного электрода, 1/К
-                             "alphaRTm",  # Экспоненциальный коэффициент сопротивления по температуре мембраны, 1/К
-                             "alphaRTn",  # Экспоненциальный коэффициент сопротивления по температуре отрицательного электрода, 1/К
-                             "bRTp",  # Граничная температура по сопротивлению положительного электрода, град С
-                             "bRTm",  # Граничная температура по сопротивлению мембраны, град С
-                             "bRTn",  # Граничная температура по сопротивлению отрицательного электрода, град С
-                             "rCRTp",  # Постоянный коэффициент температурной зависимости положительного электрода
-                             "rCRTm",  # Постоянный коэффициент температурной зависимости мембраны
-                             "rCRTn",  # Постоянный коэффициент температурной зависимости отрицательного электрода
-                             "alphaCQp",  # Зарядовый коэффициент емкости положительного электрода, 1/Кл
-                             "alphaCQn",  # Зарядовый коэффициент емкости отрицательного электрода, 1/Кл
-                             "qMatAllp",  # Общее зарядовое число молей материала положительного электрода, Кл
-                             "qMatAlln",  # Общее зарядовое число молей материала отрицательного электрода, Кл
-                             "muActsp",  # Зарядовый потенциал деградационной активации положительного электрода, В
-                             "muActsn",  # Зарядовый потенциал деградационной активации отрицательного электрода, В
-                             "bMuDegp",  # Зарядовый потенциал деградационного порога положительного электрода, В
-                             "bMuDegn",  # Зарядовый потенциал деградационного порога отрицательного электрода, В
-                             "kActElp",  # Коэффициент активации положительного электрода, См
-                             "kActEln",  # Коэффициент активации отрицательного электрода, См
-                             "kDegElp",  # Коэффициент деградации положительного электрода, См
-                             "kDegEln",  # Коэффициент деградации отрицательного электрода, См
-                             "aActElsp",  # Коэффиицент токовой активации положительного электрода
-                             "aActElsn",  # Коэффиицент токовой активации отрицательного электрода
-                             "bMuDegPosEl",  # Барьерный потенциал начала разрушения положительного электрода при переразрядке, В
-                             "kDDegps",  # Коэффициент разрушения положительного электрода при перезарядке, Ом
-
-                             "betaRI2p",
-                             "betaRI2n",
-                             "betaRI3p",
-                             "betaRI3n",
-                             "betaRQ2p",
-                             "betaRQ2n",
-                             "betaRQ3p",
-                             "betaRQ3n",
-                             "betaRT2p",
-                             "betaRT2m",
-                             "betaRT2n",
-                             "betaRT3p",
-                             "betaRT3m",
-                             "betaRT3n",
-                             "betaCQ2p",
-                             "betaCQ2n",
-                             "betaCQ3p",
-                             "betaCQ3n",
-                             "betaEQ2p",
-                             "betaEQ2n",
-                             "betaEQ3p",
-                             "betaEQ3n",
-                             "betaMuAct2p",
-                             "betaMuAct2n",
-                             "betaMuAct3p",
-                             "betaMuAct3n",
-                             "betaNonCeilp1",
-                             "betaNonCeiln1",
-                             "betaNonCeilp2",
-                             "betaNonCeiln2",
-                             "betaNonCeilp3",
-                             "betaNonCeiln3",
-                             "betaNonCeilQp1",
-                             "betaNonCeilQn1",
-                             "betaNonCeilQp2",
-                             "betaNonCeilQn2",
-                             "betaNonCeilQp3",
-                             "betaNonCeilQn3",
-                             "betaADNuMat1p",
-                             "betaADNuMat1n",
-                             "betaADNuMat2p",
-                             "betaADNuMat2n",
-                             "betaADNuMat3p",
-                             "betaADNuMat3n",
-                             "betaADNuMatDeg1p",
-                             "betaADNuMatDeg1n",
-                             "betaADNuMatDeg2p",
-                             "betaADNuMatDeg2n",
-                             "betaADNuMatDeg3p",
-                             "betaADNuMatDeg3n",
-                             "betaMuDegPos1",
-                             "betaMuDegPos2",
-                             "betaMuDegPos3",
-                             "betaNuLiDegPos1",
-                             "betaNuLiDegPos2",
-                             "betaNuLiDegPos3",
-
-                             "Rkl"
-                             ]].to_numpy()
+    USystemParametersNames = UParametersSystemParametersNames + otherSystemParametersNames
+    systemParameters = Pars[USystemParametersNames].to_numpy()
 
     # Массив начальных состояний
-    stateCoordinates0 = Pars[["qbinp0", "qm0", "qbinn0", "q0",
-                              "qMatElp", "qMatEln", "qMatDegElp", "qMatDegEln",
-                              "qDegPosEl"]].to_numpy()
-    reducedTemp0 = Pars[["TInAkk0", "TBAkk0"]].to_numpy()
+    stateCoordinates0 = Pars[stateCoordinatesNames].to_numpy()
+    reducedTemp0 = Pars[reducedTemperaturesEnergyPowersNames].to_numpy()
 
     #  Моменты времени
     NPoints = np.array(integrateAttributes["NPoints"], dtype=np.int32)  # Числа точек интегрирования
@@ -283,21 +167,21 @@ def OutputValues(dyns, fileName,
      qMatDegElp, qMatDegEln, qDegPosEl) = dyns
 
     # Заголовки и динамики
-    dynamicsHeaders = {"Time": t.reshape(-1,),
-                       "Ukl": Ukl.reshape(-1,),
-                       "Ubinp": Ubinp.reshape(-1,),
-                       "Ubinn": Ubinn.reshape(-1,),
-                       "Um": Um.reshape(-1,),
-                       "TInAkk": TInAkk.reshape(-1,),
-                       "TBAkk": TBAkk.reshape(-1,),
-                       "q": q.reshape(-1,),
-                       "Icur": Icur.reshape(-1,),
-                       "Tokr": Tokr.reshape(-1,),
-                       "qMatElp": qMatElp.reshape(-1,),
-                       "qMatEln": qMatEln.reshape(-1,),
-                       "qMatDegElp": qMatDegElp.reshape(-1,),
-                       "qMatDegEln": qMatDegEln.reshape(-1,),
-                       "qDegPosEl": qDegPosEl.reshape(-1,)
+    dynamicsHeaders = {"Time": t,
+                       "Ukl": Ukl,
+                       "Ubinp": Ubinp,
+                       "Ubinn": Ubinn,
+                       "Um": Um,
+                       "TInAkk": TInAkk,
+                       "TBAkk": TBAkk,
+                       "q": q,
+                       "Icur": Icur,
+                       "Tokr": Tokr,
+                       "qMatElp": qMatElp,
+                       "qMatEln": qMatEln,
+                       "qMatDegElp": qMatDegElp,
+                       "qMatDegEln": qMatDegEln,
+                       "qDegPosEl": qDegPosEl
                        }
 
     # Одиночные графики на полотне

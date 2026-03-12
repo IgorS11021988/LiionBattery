@@ -1,7 +1,48 @@
 import numpy as np
 
+from MathProtEnergyProcBase.IndexFunctions import GetIndex, GetIndexes
+
+from .StationFunction import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames, USystemParametersNames
 from .StationFunctions import funCbin
-from .fICharge import fICharge
+from .fU import fU, otherSystemParametersNames
+
+
+# Индексы координат состояния
+qbinpInd = GetIndex(stateCoordinatesNames, "qbinp")  # Индекс заряда положительного электрода
+qmInd = GetIndex(stateCoordinatesNames, "qm")  # Индекс заряда мембраны
+qbinnInd = GetIndex(stateCoordinatesNames, "qbinn")  # Индекс заряда отрицательного электрода
+qInd = GetIndex(stateCoordinatesNames, "q")  # Индекс перенесенного через внешнюю цепь электрического заряда
+qMatElpInd = GetIndex(stateCoordinatesNames, "qMatElp")  # Индекс зарядового числа молей недеградированного положительного электрода
+qMatElnInd = GetIndex(stateCoordinatesNames, "qMatEln")  # Индекс зарядового числа молей недеградированного отрицательного электрода
+qMatDegElpInd = GetIndex(stateCoordinatesNames, "qMatDegElp")  # Индекс зарядового числа молей деградированного положительного электрода
+qMatDegElnInd = GetIndex(stateCoordinatesNames, "qMatDegEln")  # Индекс зарядового числа молей деградированного отрицательного электрода
+qDegPosElInd = GetIndex(stateCoordinatesNames, "qDegPosEl")  # Индекс зарядового числа молей разрушенного положительного электрода
+
+# Индексы приведенных температур
+TInAkkInd = GetIndex(reducedTemperaturesEnergyPowersNames, "TInAkk")  # Индекс температуры содержимого аккумулятора
+TBAkkInd = GetIndex(reducedTemperaturesEnergyPowersNames, "TBAkk")  # Индекс температуры корпуса аккумулятора
+
+# Индексы переменных параметров системы
+IInd = GetIndex(USystemParametersNames, "I")  # Индекс тока
+
+# Индексы параметров системы
+systemParametersIndexes = GetIndexes(otherSystemParametersNames, ["Tokr",  # Температура окружающей среды
+                                                                  "Cbin0p",  # Емкость положительного двойного слоя
+                                                                  "Cm",  # Емкость мембраны
+                                                                  "Cbin0n",  # Емкость отрицательного двойного слоя
+                                                                  "Cnom",  # Номинальная емкость
+                                                                  "alphaCQp",  # Зарядовый коэффициент емкости положительного электрода
+                                                                  "alphaCQn",  # Зарядовый коэффициент емкости отрицательного электрода
+                                                                  "qMatAllp",  # Общее зарядовое число молей материала положительного электрода
+                                                                  "qMatAlln",  # Общее зарядовое число молей материала отрицательного электрода
+
+                                                                  "betaCQ2p",
+                                                                  "betaCQ2n",
+                                                                  "betaCQ3p",
+                                                                  "betaCQ3n",
+
+                                                                  "Rkl"  # Сопротивление клемм
+                                                                  ])
 
 
 # Функция состояния для литий-ионного аккумулятора
@@ -11,48 +52,47 @@ def CharacteristicsFunction(t,  # Моменты времени
                             systemParameters  # Параметры системы
                             ):
     # Получаем динамику тока
-    (Icur, otherSystemParameters) = fICharge(np.array(t, dtype=np.double),  # Моменты времени
-                                             systemParameters  # Параметры системы
-                                             )
-    Icur = np.array(Icur, dtype=np.double).reshape(-1)  # Приводим токи к одномерному массиву
+    (USystemParameters,
+     otherSystemParameters) = fU(np.array(t, dtype=np.double),  # Моменты времени
+                                 systemParameters  # Параметры системы
+                                 )
+    I = USystemParameters[:, IInd]  # Ток в текущие моменты времени
 
     # Получаем координаты состояния
-    qbinp = stateCoordinates[:, 0]  # Заряд на положительном двойном слое
-    qm = stateCoordinates[:, 1]  # Заряд на мембране
-    qbinn = stateCoordinates[:, 2]  # Заряд на отрицательном двойном слое
-    q = stateCoordinates[:, 3]  # Перенесенный через внешнюю цепь электричекий заряд
-    qMatElp = stateCoordinates[:, 4]  # Зарядовое сило молей недеградированного положительного электрода
-    qMatEln = stateCoordinates[:, 5]  # Зарядовое сило молей недеградированного отрицательного электрода
-    qMatDegElp = stateCoordinates[:, 6]  # Зарядовое сило молей деградированного положительного электрода
-    qMatDegEln = stateCoordinates[:, 7]  # Зарядовое сило молей деградированного отрицательного электрода
-    qDegPosEl = stateCoordinates[:, 8]  # Зарядовое сило молей разрушенного положительного электрода
+    qbinp = stateCoordinates[:, qbinpInd]  # Заряд на положительном двойном слое
+    qm = stateCoordinates[:, qmInd]  # Заряд на мембране
+    qbinn = stateCoordinates[:, qbinnInd]  # Заряд на отрицательном двойном слое
+    q = stateCoordinates[:, qInd]  # Перенесенный через внешнюю цепь электричекий заряд
+    qMatElp = stateCoordinates[:, qMatElpInd]  # Зарядовое число молей недеградированного положительного электрода
+    qMatEln = stateCoordinates[:, qMatElnInd]  # Зарядовое число молей недеградированного отрицательного электрода
+    qMatDegElp = stateCoordinates[:, qMatDegElpInd]  # Зарядовое число молей деградированного положительного электрода
+    qMatDegEln = stateCoordinates[:, qMatDegElnInd]  # Зарядовое число молей деградированного отрицательного электрода
+    qDegPosEl = stateCoordinates[:, qDegPosElInd]  # Зарядовое число молей разрушенного положительного электрода
 
-    # Температура содержимого аккумулятора
-    TInAkk = reducedTemp[:, 0] - 273.15
-    TBAkk = reducedTemp[:, 1] - 273.15
-
-    # Температура окружающей среды
-    Tokr = otherSystemParameters[0] - 273.15
-    Tokr = np.full_like(Icur, Tokr, dtype=np.double)  # Массив температур окружающей среды
+    # Температура аккумулятора
+    TInAkk = reducedTemp[:, TInAkkInd] - 273.15
+    TBAkk = reducedTemp[:, TBAkkInd] - 273.15
 
     # Получаем параметры
-    Cbin0p = otherSystemParameters[5]  # Емкость положительного двойного слоя
-    Cm = otherSystemParameters[6]  # Емкость мембраны
-    Cbin0n = otherSystemParameters[7]  # Емкость отрицательного двойного слоя
-    Cnom = otherSystemParameters[15]  # Номинальная емкость литий-ионного аккумулятора
-    alphaCQp = otherSystemParameters[33]  # Зарядовый коэффициент емкости положительного электрода
-    alphaCQn = otherSystemParameters[34]  # Зарядовый коэффициент емкости отрицательного электрода
-    qMatAllp = otherSystemParameters[35]  # Общее зарядовое число молей материала положительного электрода
-    qMatAlln = otherSystemParameters[36]  # Общее зарядовое число молей материала отрицательного электрода
+    [Tokr,  # Температура окружающей среды
+     Cbin0p,  # Емкость положительного двойного слоя
+     Cm,  # Емкость мембраны
+     Cbin0n,  # Емкость отрицательного двойного слоя
+     Cnom,  # Номинальная емкость литий-ионного аккумулятора
+     alphaCQp,  # Зарядовый коэффициент емкости положительного электрода
+     alphaCQn,  # Зарядовый коэффициент емкости отрицательного электрода
+     qMatAllp,  # Общее зарядовое число молей материала положительного электрода
+     qMatAlln,  # Общее зарядовое число молей материала отрицательного электрода
 
-    # Получаем довесочные коэффициенты
-    betaCQ2p = otherSystemParameters[75]
-    betaCQ2n = otherSystemParameters[76]
-    betaCQ3p = otherSystemParameters[77]
-    betaCQ3n = otherSystemParameters[78]
+     # Получаем довесочные коэффициенты
+     betaCQ2p,
+     betaCQ2n,
+     betaCQ3p,
+     betaCQ3n,
 
-    # Получаем сопротивление клемм
-    Rkl = otherSystemParameters[-1]
+     # Получаем сопротивление клемм
+     Rkl] = otherSystemParameters[systemParametersIndexes]
+    Tokr = np.full_like(I, Tokr - 273.15, dtype=np.double)  # Массив температур окружающей среды
 
     # Определяем емкости двойных слоев
     (Cbinp, Cbinn) = funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
@@ -64,7 +104,7 @@ def CharacteristicsFunction(t,  # Моменты времени
     Ubinn = qbinn / Cbinn  # Отрицательный двойной слой
 
     # Напряжение на клеммах
-    Ukl = Ubinp + Um + Ubinn - Icur * Rkl
-    return (t, Ukl, Ubinp, Ubinn, Um, TInAkk, TBAkk, q / Cnom, Icur * 3600 / Cnom, Tokr,
-            qMatElp / qMatAllp, qMatEln / qMatAlln,
+    Ukl = Ubinp + Um + Ubinn - I * Rkl
+    return (t.reshape(-1,), Ukl, Ubinp, Ubinn, Um, TInAkk, TBAkk, q / Cnom, I * 3600 / Cnom,
+            Tokr, qMatElp / qMatAllp, qMatEln / qMatAlln,
             qMatDegElp / qMatAllp, qMatDegEln / qMatAlln, qDegPosEl / qMatAllp)

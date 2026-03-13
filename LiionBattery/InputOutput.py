@@ -98,7 +98,7 @@ def InputArrayCreate(Pars,  # Параметры
 
     # Время интегрирования
     Tints = np.array(integrateAttributes["TintI0"], dtype=np.double)  # Времена интегрирования при нулевых токах
-    bIZeros = np.logical_not(np.logical_and(Pars["I"] > -integrateAttributes["bI0Ch"], Pars["I"] < integrateAttributes["bI0DCh"]))
+    bIZeros = np.logical_not(np.logical_and(Pars["I"] > -integrateAttributes["bI0Ch"], Pars["I"] < integrateAttributes["bI0DCh"])).to_numpy()
     if np.any(bIZeros):
         # Рассчитываем время интегрирования для ненулевого тока
         sI = np.sign(Pars["I"][bIZeros])  # Знак тока

@@ -1,6 +1,7 @@
 import numpy as np
 
-from .StationFunction import IndepStateFunction, stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
+from .StationFunction import IndepStateFunction
+from .AttributesNames import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
 
 from MathProtEnergyProc.HeatPowerValues import IntPotentialsOne, HeatValuesOne
 
@@ -114,7 +115,6 @@ def StructureFunction():
                                                     np.zeros_like(aActp),  # Коэффициенты эквивалетность термодинаических сил
                                                     sbinp  # Блок кинетической матрицы
                                                     )
-                                                   
 
         # Кинетическая матрица отрицательного электрода
         sbinn = np.array([[1 / PosLinearFilter(rbinn)]], dtype=np.double)
@@ -123,7 +123,7 @@ def StructureFunction():
                                                     np.zeros_like(aActn),  # Коэффициенты эквивалетность термодинаических сил
                                                     sbinn  # Блок кинетической матрицы
                                                     )
-        
+
         # Кинетическая матрица аккумулятора
         (kineticMatrixPCPC,
          kineticMatrixPCHeat,

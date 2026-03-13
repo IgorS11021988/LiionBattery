@@ -86,9 +86,9 @@ def InputArrayCreate(Pars,  # Параметры
     Pars.drop(columns=["qNoDegPosEl"], axis=1, inplace=True)
 
     # Начальное состояние
-    Pars["qbinp"] *= Pars["EbinpC"] * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
+    Pars["qbinp"] *= (Pars["EbinpC"] * (1 - Pars["q"]) + Pars["EbinpD"] * Pars["q"]) * Pars["Cbin0p"]  # Заряд на положительном двойном слое, Кл
     Pars["qm"] *= rCnom  # Заряд мембраны, Кл
-    Pars["qbinn"] *= Pars["EbinnC"] * Pars["Cbin0n"]  # Заряд на отрицательном двойном слое, Кл
+    Pars["qbinn"] *= (Pars["EbinnC"] * (1 - Pars["q"]) + Pars["EbinnD"] * Pars["q"]) * Pars["Cbin0n"]  # Заряд на отрицательном двойном слое, Кл
     Pars["q"] *= Pars["Cnom"]  # Перенесенный через внешнюю цепь заряд, Кл
     Pars["TInAkk"] += Pars["Tokr"]  # Начальная температура сождержимого литий-ионного элемента, град С
     Pars["TBAkk"] += Pars["Tokr"]  # Начальная температура корпуса литий-ионного элемента, град С

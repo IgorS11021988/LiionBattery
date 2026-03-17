@@ -26,6 +26,8 @@ IInd = GetIndex(USystemParametersNames, "I")  # Индекс тока
 
 # Индексы параметров системы
 systemParametersIndexes = GetIndexes(otherSystemParametersNames, ["Tokr",  # Температура окружающей среды
+                                                                  "UChMax",  # Граничное напряжение заряда, В
+                                                                  "bI0Ch",  # Граница зарядного нулевого тока
                                                                   "Cbin0p",  # Емкость положительного двойного слоя
                                                                   "Cm",  # Емкость мембраны
                                                                   "Cbin0n",  # Емкость отрицательного двойного слоя
@@ -71,6 +73,8 @@ def CharacteristicsFunction(t,  # Моменты времени
 
     # Получаем параметры
     [Tokr,  # Температура окружающей среды
+     UChMax,  # Граничное напряжение заряда
+     bI0Ch,  # Граница зарядного нулевого тока
      Cbin0p,  # Емкость положительного двойного слоя
      Cm,  # Емкость мембраны
      Cbin0n,  # Емкость отрицательного двойного слоя
@@ -99,8 +103,18 @@ def CharacteristicsFunction(t,  # Моменты времени
     Um = qm / Cm  # Мембрана
     Ubinn = qbinn / Cbinn  # Отрицательный двойной слой
 
-    # Напряжение на клеммах
-    Ukl = Ubinp + Um + Ubinn - Icur * Rkl
+    # Напряжение на клеммах (предварительно)
+    USum = Ubinp + Um + Ubinn
+    Ukl = USum - Icur * Rkl
+
+    # Определяем ток
+    bVarICur = np.logical_and(Icur < -bI0Ch, Ukl > UChMax)
+    Icur[bVarICur] = (USum[bVarICur] - UChMax) / Rkl
+
+    # Напряжение на клеммах (окончательно)
+    Ukl = USum - Icur * Rkl
+
+    # Вывод результата
     return (t.reshape(-1,), Ukl, Ubinp, Ubinn, Um, TInAkk, TBAkk, q / Cnom, Icur * 3600 / Cnom,
             Tokr, qMatElp / qMatAllp, qMatEln / qMatAlln,
             qMatDegElp / qMatAllp, qMatDegEln / qMatAlln, qDegPosEl / qMatAllp)

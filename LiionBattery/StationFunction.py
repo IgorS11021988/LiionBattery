@@ -27,6 +27,8 @@ def IndepStateFunction(stateCoordinates,
 
     # Получаем параметры
     [I,  # Ток во внешней цепи
+     UChMax,  # Граничное напряжение заряда
+     bI0Ch,  # Граница зарядного нулевого тока
      Tokr,  # Температура окружающей среды
      EbinpC,  # ЭДС положительного двойного слоя в заряженном состоянии
      EbinnC,  # ЭДС отрицательного двойного слоя в заряженном состоянии
@@ -137,9 +139,6 @@ def IndepStateFunction(stateCoordinates,
      Rkl  # Сопротивление клемм
      ] = systemParameters
 
-    # Внешний поток теплоты на корпус аккумулятора
-    heatStreambEnPow = Rkl * np.power(I, 2)
-
     # Рассчитываем приведенные (в единицах зарядовой емкости) числа молей интеркалированных в электроды ионов лития
     nuLip = qbinp + q  # Положительный электрод
     nuLin = qbinn + q  # Отрицательный электрод
@@ -153,9 +152,24 @@ def IndepStateFunction(stateCoordinates,
     (Cbinp, Cbinn) = funCbin(qbinp, qbinn, alphaCQp, alphaCQn, Cbin0p, Cbin0n,
                              betaCQ2p, betaCQ2n, betaCQ3p, betaCQ3n)
 
+    # Рассчитываем напряжения двойных слоев
+    Ubinp = qbinp / Cbinp  # Положительный двойной слой
+    Um = qm / Cm  # Мембрана
+    Ubinn = qbinn / Cbinn  # Отрицательный двойной слой
+
+    # Напряжение на клеммах
+    Ukl = Ubinp + Um + Ubinn - I * Rkl
+
+    # Определяем ток
+    if (I < -bI0Ch) and (Ukl > UChMax):
+        I = (Ubinp + Um + Ubinn - UChMax) / Rkl
+
+    # Внешний поток теплоты на корпус аккумулятора
+    heatStreambEnPow = Rkl * np.power(I, 2)
+
     # Определяем падения напряжения на двойных слоях
-    dissUbinp = Ebinp - qbinp / Cbinp  # Положительный двойной слой
-    dissUbinn = Ebinn - qbinn / Cbinn  # Отрицательный двойной слой
+    dissUbinp = Ebinp - Ubinp  # Положительный двойной слой
+    dissUbinn = Ebinn - Ubinn  # Отрицательный двойной слой
 
     # Определяем числа и приведенные числа молей активированных материалов электродов
     (nuActElp, rNuActElp) = funNuEMat(qMatElp, qDegPosEl + qMatDegElp, qMatAllp)  # Положительный электрод
@@ -170,7 +184,7 @@ def IndepStateFunction(stateCoordinates,
                                 betaMuAct2n, betaMuAct3n)  # Отрицательный электрод
 
     # Матрица Якоби приведенной энтропии по электрическим зарядам
-    JSq = np.array([dissUbinp, -qm / Cm, dissUbinn, Ebinp + Ebinn,
+    JSq = np.array([dissUbinp, -Um, dissUbinn, Ebinp + Ebinn,
                     muActp, muActn, muDegp, muDegn,
                     muActp - bMuDegPosEl], dtype=np.double) / TInAkk
 

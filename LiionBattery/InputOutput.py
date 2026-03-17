@@ -12,12 +12,15 @@ def InputArrayCreate(Pars,  # Параметры
                      ):  # Формирование массивов входных параметров
     # Корректируем токи во внешней цепи их аттрибуты
     Pars[["I",  # Ток во внешней цепи
-          "IStepDischarge",  # Ток разряда после ступеньки, Cnom
+          "IStep",  # Ток разряда после ступеньки, Cnom
           "AI"  # Амплитуда колебаний тока во внешней цепи
           ]] *= Pars[["Cnom"]].to_numpy()
     integrateAttributes[["bI0DCh",  # Граница разрядного нулевого тока
                          "bI0Ch"  # Граница зарядного нулевого тока
                          ]] *= Pars[["Cnom"]].to_numpy()
+
+    # Добавляем границу по току в параметры
+    Pars["bI0Ch"] = integrateAttributes["bI0Ch"].to_numpy()
 
     # Корректируем аттрибуты качающейся частоты
     Pars["AosI"] *= Pars["fI"] / 100  # Амплитуда качающейся частоты
@@ -97,38 +100,30 @@ def InputArrayCreate(Pars,  # Параметры
     Pars[["TInAkk", "TBAkk", "Tokr", "bRTp", "bRTm", "bRTn"]] += 273.15
 
     # Время интегрирования
-    Tints = np.array(integrateAttributes["TintI0"], dtype=np.double)  # Времена интегрирования при нулевых токах
-    bIZeros = np.logical_not(np.logical_and(Pars["I"] > -integrateAttributes["bI0Ch"], Pars["I"] < integrateAttributes["bI0DCh"])).to_numpy()
-    if np.any(bIZeros):
+    Tints = np.array(integrateAttributes["TintI0"], dtype=np.double)  # Времена интегрирования при нулевых токах или при заряде
+    bIDisCharge = (Pars["I"].to_numpy() > integrateAttributes["bI0DCh"].to_numpy())
+    if np.any(bIDisCharge):
         # Рассчитываем время интегрирования для ненулевого тока
-        sI = np.sign(Pars["I"][bIZeros])  # Знак тока
-        sc = (np.abs(sI) + sI) / 2  # При заряде 0, при разряде 1
-        sd = (np.abs(sI) - sI) / 2  # При заряде 1, при разряде 0
-        IZeros = 1.011 * np.abs(Pars["I"][bIZeros])  # Ненулевой ток (по модулю)
-        Tints[bIZeros] = ((Pars["Cnom"][bIZeros] - Pars["q"][bIZeros]) * sc + Pars["q"][bIZeros] * sd * integrateAttributes["cTimeCharge"]) / IZeros  # Время интегрирования
+        IZeros = 1.011 * Pars["I"][bIDisCharge]  # Ненулевой ток (по модулю)
+        Tints[bIDisCharge] = (Pars["Cnom"][bIDisCharge] - Pars["q"][bIDisCharge]) / IZeros  # Время интегрирования
 
-    # Время начала конца заряда
+    # Время начала второй ступени
     Pars["cTIStep"] = np.array(Pars["cTIStep"], dtype=np.double).reshape(-1,)  # Приводим коэффициент времени ступенчатого перехода к массиву
     Pars["cTIStep"] *= Tints  # Время начала конца разряда
 
     # Корректируем время разряда
-    if np.any(bIZeros):
-        bIZeros[bIZeros] = (sc > 0)  # Режимы разряда
-        if np.any(bIZeros):
-            # Оставшееся время
-            tost = Tints[bIZeros] - Pars["cTIStep"][bIZeros]
-            bIZeros[bIZeros] = (tost > 0)  # Индексы ненулевого оставшегося времени
+    if np.any(bIDisCharge):
+        # Оставшееся время
+        tost = Tints[bIDisCharge] - Pars.loc[bIDisCharge, "cTIStep"]
+        bIDisCharge[bIDisCharge] = (tost > 0)  # Индексы ненулевого оставшегося времени
 
-            if np.any(bIZeros):
-                # Оставшийся заряд
-                cqost = Pars["Cnom"][bIZeros] - Pars["q"][bIZeros] - Pars["I"][bIZeros] * Pars["cTIStep"][bIZeros]
+        if np.any(bIDisCharge):
+            # Оставшийся заряд
+            cqost = Pars["Cnom"][bIDisCharge] - Pars["q"][bIDisCharge] - Pars["I"][bIDisCharge] * Pars["cTIStep"][bIDisCharge]
 
-                # Времена интегрирования
-                IStepZeros = 1.011 * np.abs(Pars["IStepDischarge"][bIZeros])  # Ненулевой ток (по модулю)
-                Tints[bIZeros] = Pars["cTIStep"][bIZeros] + cqost / IStepZeros  # Обновленные времена интегрирования
-
-    # Постоянная времени конца заряда
-    Pars["cTauEndCharge"] *= Tints
+            # Времена интегрирования
+            IStepZeros = 1.011 * np.abs(Pars["IStep"][bIDisCharge])  # Ненулевой ток (по модулю)
+            Tints[bIDisCharge] = Pars["cTIStep"][bIDisCharge] + cqost / IStepZeros  # Обновленные времена интегрирования
 
     #  Моменты времени
     NPoints = np.array(integrateAttributes["NPoints"], dtype=np.int32)  # Числа точек интегрирования

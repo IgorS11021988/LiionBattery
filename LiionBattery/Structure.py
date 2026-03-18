@@ -214,6 +214,7 @@ def ConstParametersFunction(sysStructure  # Структура системы
     sysStructure.SetBalanceStateCoordinatesConstElement("qMatDegEln", "degn", 1)
     sysStructure.SetBalanceStateCoordinatesConstElement("qbinp", "dqDegPosEl", 1)
     sysStructure.SetBalanceStateCoordinatesConstElement("qDegPosEl", "dqDegPosEl", 1)
+    sysStructure.SetBalanceStateCoordinatesConstElement("qMatElp", "dqDegPosEl", -1)
 
     # Задаем доли распределения некомпенсированной теплоты
     sysStructure.SetBetaConstElement("EnPowInAkk", "dqbinp", 1.0)

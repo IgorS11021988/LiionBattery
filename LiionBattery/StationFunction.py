@@ -233,7 +233,7 @@ def IndepStateFunction(stateCoordinates,
                              betaADNuMatDeg1n, betaADNuMatDeg2n, betaADNuMatDeg3n)  # Отрицательный электрод
 
     # Определяем коэффициент разрушения положительного электрода
-    rMuDegPos = dissUbinp + muActp - bMuDegPosEl
+    rMuDegPos = dissUbinp - bMuDegPosEl
     kDDegp = funKDDegPosEl(nuLip, rMuDegPos, TInAkk,
                            Cnom, bMuDegPosEl, kDDegps,
                            betaMuDegPos1, betaMuDegPos2, betaMuDegPos3,

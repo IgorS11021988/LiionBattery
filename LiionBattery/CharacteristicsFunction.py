@@ -51,7 +51,8 @@ def CharacteristicsFunction(t,  # Моменты времени
                             stateCoordinates,  # Координаты состояния
                             reducedTemp,  # Приведенные температуры
                             USystemParameters,  # U-параметры системы
-                            otherSystemParameters  # Прочие параметры системы
+                            otherSystemParameters,  # Прочие параметры системы
+                            nEqSysQ  # Указатель на функцию системы
                             ):
     # Получаем динамику тока
     Icur = USystemParameters[:, IInd]  # Ток в текущие моменты времени

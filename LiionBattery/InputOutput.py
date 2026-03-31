@@ -142,7 +142,7 @@ def OutputValues(dyns, fileName,
                  ):
     # Получаем величины из кортежа
     (t, Ukl, Ubinp, Ubinn, Um,
-     TInAkk, TBAkk, q, Icur, Tokr,
+     TInAkk, TBAkk, q, Ibinp, Im, Ibinn, Icur, Tokr,
      qMatElp, qMatEln,
      qMatDegElp, qMatDegEln, qDegPosEl) = dyns
 
@@ -156,6 +156,9 @@ def OutputValues(dyns, fileName,
                        "TBAkk": TBAkk,
                        "q": q,
                        "Icur": Icur,
+                       "Ibinp": Ibinp,
+                       "Ibinn": Ibinn,
+                       "Im": Im,
                        "Tokr": Tokr,
                        "qMatElp": qMatElp,
                        "qMatEln": qMatEln,
@@ -169,12 +172,6 @@ def OutputValues(dyns, fileName,
                              "graphName": "Напряжение на клеммах",  # Имя полотна
                              "yAxesName": "Напряжение, В",  # Имя оси ординат
                              "graphFileBaseName": "AkkVoltage"  # Имя файла графика
-                             },
-
-                            {"values": Icur,  # Величины в моменты времени
-                             "graphName": "Ток в цепи",  # Имя полотна
-                             "yAxesName": "Ток, Cnom",  # Имя оси ординат
-                             "graphFileBaseName": "AkkCurrent"  # Имя файла графика
                              },
 
                             {"values": qDegPosEl,  # Величины в моменты времени
@@ -198,6 +195,15 @@ def OutputValues(dyns, fileName,
                             "graphName": "Напряжения в литий-ионном аккумуляторе",  # Имя полотна
                             "yAxesName": "Напряжение, В",  # Имя оси
                             "graphFileBaseName": "InAkkVoltage"  # Имя файла графика
+                            },
+
+                           {"listValues": [Ibinn, Ibinp, Im, Icur],  # Список величин в моменты времени
+                            "listValuesNames": ["Отрицательный двойной слой",
+                                                "Положительный двойной слой",
+                                                "Мембрана",
+                                                "Ток во внешней цепи"],  # Список имен величин (в моменты времени)
+                            "graphName": "Токи в литийионном аккумуляторе",  # Имя полотна
+                            "yAxesName": "Ток, Cnom"  # Имя оси
                             },
 
                            {"listValues": [qMatElp, qMatDegElp],  # Список величин в моменты времени

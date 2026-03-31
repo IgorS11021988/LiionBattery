@@ -1,7 +1,7 @@
 import numpy as np
 
 from .StationFunction import IndepStateFunction
-from .AttributesNames import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames
+from .AttributesNames import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames, processCoordinatesNames
 
 from MathProtEnergyProc.HeatPowerValues import IntPotentialsOne, HeatValuesOne
 
@@ -11,7 +11,6 @@ from MathProtEnergyProc.CorrectionModel import PosLinearFilter, ReluFilter, Kine
 # Функция структуры аккумулятора
 def StructureFunction():
     # Описываем структуру водородно-воздушного топливного элемента
-    processCoordinatesNames = ["dqbinp", "dqm", "dqbinn", "deactp", "deactn", "degp", "degn", "dqDegPosEl"]  # Имена координат процессов
     energyPowersNames = ["EnPowInAkk", "EnPowBAkk", "EnPowOkr"]  # Имена энергетических степеней свободы
     energyPowersBetNames = []  # Имена взаимодействий между энергетическими степенями свободы
     heatTransfersNames = ["QInBAkk", "QBAkkExp"]  # Имена потоков переноса теплоты
@@ -75,93 +74,109 @@ def StructureFunction():
                                  )
 
     # Функция состояния для литий-ионного аккумулятора
-    def StateFunction(stateCoordinates,
-                      reducedTemp,
-                      systemParameters):
-        # Получаем независимые составляющие свойств веществ и процессов
-        (I, Tokr, heatStreambEnPow,
-         JSq, JST, HSqT, HSTT,
-         rbinp, rbinn, rm,
-         aActp, aActn, kActp, kActn,
-         KDegEl, KQAkk) = IndepStateFunction(stateCoordinates,
-                                             reducedTemp,
-                                             systemParameters)
+    class StateFunction(object):
+        # Инициализация класса
+        def __init__(self,
 
-        # Матрица баланса
-        balanceMatrix = np.array([])
+                     indepStateFunction  # Независимая функция состояния
+                     ):
+            # Заполняем поле
+            self.__indepStateFunction = indepStateFunction  # Независимая функция состояния
 
-        # Внешние потоки зарядов
-        stateCoordinatesStreams = np.array([-I, -I, -I, I], dtype=np.double)
+        # Выводим независимую функцию состояния
+        def GetIndepStateFunction(self):
+            return self.__indepStateFunction
 
-        # Внешние потоки теплоты
-        heatEnergyPowersStreams = np.array([heatStreambEnPow], dtype=np.double)
+        # Тело функтора
+        def __call__(self,
 
-        # Выводим температуры
-        energyPowerTemperatures = np.hstack([reducedTemp, [Tokr]])
+                     stateCoordinates,
+                     reducedTemp,
+                     systemParameters):
+            # Получаем независимые составляющие свойств веществ и процессов
+            (I, Tokr, heatStreambEnPow,
+             JSq, JST, HSqT, HSTT,
+             rbinp, rbinn, rm,
+             aActp, aActn, kActp, kActn,
+             KDegEl, KQAkk) = self.__indepStateFunction(stateCoordinates,
+                                                        reducedTemp,
+                                                        systemParameters)
 
-        # Потенциалы взаимодействия энергетических степеней свободы
-        potentialInter = potentialInterAkk(JSq, reducedTemp)
+            # Матрица баланса
+            balanceMatrix = np.array([])
 
-        # Потенциалы взаимодействия между энергетическими степенями свободы
-        potentialInterBet = np.array([])
+            # Внешние потоки зарядов
+            stateCoordinatesStreams = np.array([-I, -I, -I, I], dtype=np.double)
 
-        # Доли распределения некомпенсированной теплоты
-        beta = np.array([])
+            # Внешние потоки теплоты
+            heatEnergyPowersStreams = np.array([heatStreambEnPow], dtype=np.double)
 
-        # Кинетическая матрица положительного электрода
-        sbinp = np.array([[1 / PosLinearFilter(rbinp)]], dtype=np.double)
-        kMatrElp = KineticMatrixFromFacStreamEkvAff(ReluFilter(kActp),  # Необратимая составляющая кинетической матрицы
-                                                    aActp.reshape(1, 1),  # Коэффициенты увлечения потоков
-                                                    np.zeros_like(aActp),  # Коэффициенты эквивалетность термодинаических сил
-                                                    sbinp  # Блок кинетической матрицы
-                                                    )
+            # Выводим температуры
+            energyPowerTemperatures = np.hstack([reducedTemp, [Tokr]])
 
-        # Кинетическая матрица отрицательного электрода
-        sbinn = np.array([[1 / PosLinearFilter(rbinn)]], dtype=np.double)
-        kMatrEln = KineticMatrixFromFacStreamEkvAff(ReluFilter(kActn),  # Необратимая составляющая кинетической матрицы
-                                                    aActn.reshape(1, 1),  # Коэффициенты увлечения потоков
-                                                    np.zeros_like(aActn),  # Коэффициенты эквивалетность термодинаических сил
-                                                    sbinn  # Блок кинетической матрицы
-                                                    )
+            # Потенциалы взаимодействия энергетических степеней свободы
+            potentialInter = potentialInterAkk(JSq, reducedTemp)
 
-        # Кинетическая матрица аккумулятора
-        (kineticMatrixPCPC,
-         kineticMatrixPCHeat,
-         kineticMatrixHeatPC,
-         kineticMatrixHeatHeat) = kinMatrixEl([kMatrElp,
-                                               kMatrEln])
+            # Потенциалы взаимодействия между энергетическими степенями свободы
+            potentialInterBet = np.array([])
 
-        # Главный блок кинетической матрицы по процессам
-        kineticMatrixPCPC = np.hstack([kineticMatrixPCPC,
-                                       [1 / PosLinearFilter(rm)],
-                                       ReluFilter(KDegEl)])
+            # Доли распределения некомпенсированной теплоты
+            beta = np.array([])
 
-        # Главный блок кинетической матрицы по теплообмену
-        kineticMatrixHeatHeat = np.hstack([kineticMatrixHeatHeat,
-                                           ReluFilter(KQAkk)])
+            # Кинетическая матрица положительного электрода
+            sbinp = np.array([[1 / PosLinearFilter(rbinp)]], dtype=np.double)
+            kMatrElp = KineticMatrixFromFacStreamEkvAff(ReluFilter(kActp),  # Необратимая составляющая кинетической матрицы
+                                                        aActp.reshape(1, 1),  # Коэффициенты увлечения потоков
+                                                        np.zeros_like(aActp),  # Коэффициенты эквивалетность термодинаических сил
+                                                        sbinp  # Блок кинетической матрицы
+                                                        )
 
-        # Обратная теплоемкость и приведенные тепловые эффекты литий-ионного аккумулятора
-        (invHeatCapacityMatrixCf,  # Обратная теплоемкость водородно-воздушного топливного элемента
-         heatEffectMatrixCf  # Приведенные тепловые эффекты водородно-воздушного топливного элемента
-         ) = heatValuesAkk(JST,  # Якобиан приведенной энтропии по температурам
-                           HSTT,  # Матрица Гесса приведенной энтропии по температурам
-                           HSqT,  # Матрица Гесса приведенной энтропии по температурам и координатам состояния
-                           reducedTemp  # Температуры
-                           )
+            # Кинетическая матрица отрицательного электрода
+            sbinn = np.array([[1 / PosLinearFilter(rbinn)]], dtype=np.double)
+            kMatrEln = KineticMatrixFromFacStreamEkvAff(ReluFilter(kActn),  # Необратимая составляющая кинетической матрицы
+                                                        aActn.reshape(1, 1),  # Коэффициенты увлечения потоков
+                                                        np.zeros_like(aActn),  # Коэффициенты эквивалетность термодинаических сил
+                                                        sbinn  # Блок кинетической матрицы
+                                                        )
 
-        # Выводим результат
-        return (balanceMatrix,
-                stateCoordinatesStreams,
-                heatEnergyPowersStreams,
-                energyPowerTemperatures,
-                potentialInter,
-                potentialInterBet,
-                beta, kineticMatrixPCPC,
-                kineticMatrixPCHeat,
-                kineticMatrixHeatPC,
-                kineticMatrixHeatHeat,
-                invHeatCapacityMatrixCf,
-                heatEffectMatrixCf)
+            # Кинетическая матрица аккумулятора
+            (kineticMatrixPCPC,
+             kineticMatrixPCHeat,
+             kineticMatrixHeatPC,
+             kineticMatrixHeatHeat) = kinMatrixEl([kMatrElp,
+                                                   kMatrEln])
+
+            # Главный блок кинетической матрицы по процессам
+            kineticMatrixPCPC = np.hstack([kineticMatrixPCPC,
+                                           [1 / PosLinearFilter(rm)],
+                                           ReluFilter(KDegEl)])
+
+            # Главный блок кинетической матрицы по теплообмену
+            kineticMatrixHeatHeat = np.hstack([kineticMatrixHeatHeat,
+                                               ReluFilter(KQAkk)])
+
+            # Обратная теплоемкость и приведенные тепловые эффекты литий-ионного аккумулятора
+            (invHeatCapacityMatrixCf,  # Обратная теплоемкость водородно-воздушного топливного элемента
+             heatEffectMatrixCf  # Приведенные тепловые эффекты водородно-воздушного топливного элемента
+             ) = heatValuesAkk(JST,  # Якобиан приведенной энтропии по температурам
+                               HSTT,  # Матрица Гесса приведенной энтропии по температурам
+                               HSqT,  # Матрица Гесса приведенной энтропии по температурам и координатам состояния
+                               reducedTemp  # Температуры
+                               )
+
+            # Выводим результат
+            return (balanceMatrix,
+                    stateCoordinatesStreams,
+                    heatEnergyPowersStreams,
+                    energyPowerTemperatures,
+                    potentialInter,
+                    potentialInterBet,
+                    beta, kineticMatrixPCPC,
+                    kineticMatrixPCHeat,
+                    kineticMatrixHeatPC,
+                    kineticMatrixHeatHeat,
+                    invHeatCapacityMatrixCf,
+                    heatEffectMatrixCf)
 
     # Выводим структуру литий-ионного аккумулятора
     return (stateCoordinatesNames,  # Имена координат состояния
@@ -174,7 +189,7 @@ def StructureFunction():
             heatTransfersInputEnergyPowersNames,  # Имена энергетических степеней свободы, на которые приходит теплота
             stateCoordinatesStreamsNames,  # Имена координат состояния, изменяемых в результате внешних потоков
             heatEnergyPowersStreamsNames,  # Имена потоков теплоты на энергетические степени свободы
-            StateFunction,  # Функция состояния
+            StateFunction(IndepStateFunction()),  # Функция состояния
             stateCoordinatesVarBalanceNames,  # Имена переменных коэффициентов матрицы баланса по координатам состояния
             processCoordinatesVarBalanceNames,  # Имена переменных коэффициентов матрицы баланса по координатам процессов
             energyPowersVarTemperatureNames,  # Имена переменных температур энергетических степеней свободы

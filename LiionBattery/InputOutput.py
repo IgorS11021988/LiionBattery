@@ -203,7 +203,8 @@ def OutputValues(dyns, fileName,
                                                 "Мембрана",
                                                 "Ток во внешней цепи"],  # Список имен величин (в моменты времени)
                             "graphName": "Токи в литийионном аккумуляторе",  # Имя полотна
-                            "yAxesName": "Ток, Cnom"  # Имя оси
+                            "yAxesName": "Ток, Cnom",  # Имя оси
+                            "graphFileBaseName": "AkkCurrents"  # Имя файла графика
                             },
 
                            {"listValues": [qMatElp, qMatDegElp],  # Список величин в моменты времени

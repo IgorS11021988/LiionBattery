@@ -1,6 +1,6 @@
 import numpy as np
 
-from .StationFunctions import funEbin, funCbin, funRbin, funNuEMat, funMuMat, funADNu, funCf0, funKDDegPosEl
+from .StationFunctions import funEbin, funCbin, funRbin, funNuEMat, funMuMat, funADNu, funCf0, funKDDegPosEl, funCKbAkk
 from MathProtEnergyProc import NonEqSystemQBase
 
 
@@ -82,6 +82,8 @@ class IndepStateFunction(object):
          aActElsn,  # Коэффиицент токовой активации отрицательного электрода
          bMuDegPosEl,  # Барьерный потенциал начала разрушения положительного электрода при переразрядке
          kDDegps,  # Коэффициент разрушения положительного электрода при перезарядке
+         bDeltaTtoOkr,  # Граничная разность температур, при которой ухудшается теплообмен
+         cDeltaTtoOkr,  # Коэффициент разности температур, при которой ухудшается теплообмен
 
          betaRI2p,
          betaRI2n,
@@ -139,6 +141,8 @@ class IndepStateFunction(object):
          betaNuLiDegPos1,
          betaNuLiDegPos2,
          betaNuLiDegPos3,
+         betaDeltaTtoOkr2,
+         betaDeltaTtoOkr3,
 
          Rkl  # Сопротивление клемм
          ] = systemParameters
@@ -257,7 +261,10 @@ class IndepStateFunction(object):
         aActn = np.array([-aActElsn * np.sign(dissUbinn)], dtype=np.double)
 
         # Коэффициенты теплообмена
-        KQAkk = np.array([KInAkk * TInAkk, KBAkk * Tokr], dtype=np.double) * TBAkk / NonEqSystemQBase.GetTbase()
+        cKbAkk = funCKbAkk(TBAkk, Tokr,
+                           cDeltaTtoOkr, bDeltaTtoOkr,
+                           betaDeltaTtoOkr2, betaDeltaTtoOkr3)
+        KQAkk = np.array([KInAkk * TInAkk, KBAkk * cKbAkk * Tokr], dtype=np.double) * TBAkk / NonEqSystemQBase.GetTbase()
 
         # Выводим результат
         return (I, Tokr,

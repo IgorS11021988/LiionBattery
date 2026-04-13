@@ -60,6 +60,8 @@ otherSystemParametersNames = ["UChMax",  # Граничное напряжени
                               "aActElsn",  # Коэффиицент токовой активации отрицательного электрода
                               "bMuDegPosEl",  # Барьерный потенциал начала разрушения положительного электрода при переразрядке, В
                               "kDDegps",  # Коэффициент разрушения положительного электрода при перезарядке, Ом
+                              "bDeltaTtoOkr",  # Граничная разность температур, при которой ухудшается теплообмен, град С
+                              "cDeltaTtoOkr",  # Коэффициент разности температур, при которой ухудшается теплообмен, град С
 
                               "betaRI2p",
                               "betaRI2n",
@@ -117,6 +119,8 @@ otherSystemParametersNames = ["UChMax",  # Граничное напряжени
                               "betaNuLiDegPos1",
                               "betaNuLiDegPos2",
                               "betaNuLiDegPos3",
+                              "betaDeltaTtoOkr2",
+                              "betaDeltaTtoOkr3",
 
                               "Rkl"  # Сопротивление клемм, Ом
                               ]

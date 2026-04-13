@@ -54,6 +54,17 @@ def funNuEMat(nuMat, nuMatDeg, NuAll):
     return (nuEMat, nuEMat / NuAll)
 
 
+def funCKbAkk(TBAkk, Tokr,
+              cDeltaTtoOkr, bDeltaTtoOkr,
+              betaDeltaTtoOkr2, betaDeltaTtoOkr3):
+    # Получаем коэффициент
+    cKbAkk = 1 / (1 + np.exp(cDeltaTtoOkr * (np.abs(TBAkk - Tokr) - bDeltaTtoOkr)))
+    cKbAkk += betaDeltaTtoOkr2 * np.power(cKbAkk - 1 / 2, 2) + betaDeltaTtoOkr3 * np.power(cKbAkk - 1 / 2, 3)
+
+    # Выводим результат
+    return cKbAkk
+
+
 # Функции для свойств веществ и процессов
 def funNuEbin(nuLip, nuLin, rLiEpE, rLiEnE, Cnom,
               betaEQ2p, betaEQ2n, betaEQ3p, betaEQ3n):

@@ -58,8 +58,8 @@ def funCKbAkk(TBAkk, Tokr,
               cDeltaTtoOkr, bDeltaTtoOkr,
               betaDeltaTtoOkr2, betaDeltaTtoOkr3):
     # Получаем коэффициент
-    cKbAkk = 1 / (1 + np.exp(cDeltaTtoOkr * (np.abs(TBAkk - Tokr) - bDeltaTtoOkr)))
-    cKbAkk += betaDeltaTtoOkr2 * np.power(cKbAkk - 1 / 2, 2) + betaDeltaTtoOkr3 * np.power(cKbAkk - 1 / 2, 3)
+    cKbAkk = ReluFilter(cDeltaTtoOkr * (np.abs(TBAkk - Tokr) - bDeltaTtoOkr))
+    cKbAkk += 1 + betaDeltaTtoOkr2 * np.power(cKbAkk, 2) + betaDeltaTtoOkr3 * np.power(cKbAkk, 3)
 
     # Выводим результат
     return cKbAkk

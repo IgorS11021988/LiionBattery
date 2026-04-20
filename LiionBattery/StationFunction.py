@@ -84,6 +84,7 @@ class IndepStateFunction(object):
          kDDegps,  # Коэффициент разрушения положительного электрода при перезарядке
          bDeltaTtoOkr,  # Граничная разность температур, при которой ухудшается теплообмен
          cDeltaTtoOkr,  # Коэффициент разности температур, при которой ухудшается теплообмен
+         rNuLi0p,  # Относительное число молей лития в положительном электроде
 
          betaRI2p,
          betaRI2n,
@@ -227,7 +228,7 @@ class IndepStateFunction(object):
                        nRQp, nRQn, alphaRQp / corrQp, alphaRQn / corrQn,
                        nuLip, nuLin, alphaRTp, alphaRTn, bRTp, bRTn,
                        rCRTp, rCRTn, alphaRTm, bRTm, rCRTm, TInAkk, Cnom,
-                       Rbin0p * corrRbinp, Rbin0n * corrRbinn, Rm0,
+                       Rbin0p * corrRbinp, Rbin0n * corrRbinn, Rm0, rNuLi0p,
                        betaRI2p, betaRI2n, betaRI3p, betaRI3n,
                        betaRQ2p, betaRQ2n, betaRQ3p, betaRQ3n,
                        betaRT2p, betaRT2m, betaRT2n, betaRT3p,

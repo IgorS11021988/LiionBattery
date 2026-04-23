@@ -30,7 +30,7 @@ class IndepStateFunction(object):
          ] = reducedTemp
 
         # Получаем параметры
-        [I,  # Ток во внешней цепи
+        [ICur,  # Ток во внешней цепи
          UChMax,  # Граничное напряжение заряда
          bI0Ch,  # Граница зарядного нулевого тока
          Tokr,  # Температура окружающей среды
@@ -172,15 +172,15 @@ class IndepStateFunction(object):
         # Напряжение на клеммах
         Uin = Ubinp + Um + Ubinn  # Напряжение внутри аккумулятора
         self.__Uin = Uin
-        Ukl = Uin - I * Rkl
+        Ukl = Uin - ICur * Rkl
 
         # Определяем ток
-        if (I < -bI0Ch) and (Ukl > UChMax):
-            I = (Uin - UChMax) / Rkl
-        self.__Icur = I
+        if (ICur < -bI0Ch) and (Ukl > UChMax):
+            ICur = (Uin - UChMax) / Rkl
+        self.__Icur = ICur
 
         # Внешний поток теплоты на корпус аккумулятора
-        heatStreambEnPow = Rkl * np.power(I, 2)
+        heatStreambEnPow = Rkl * np.power(ICur, 2)
 
         # Определяем падения напряжения на двойных слоях
         dissUbinp = Ebinp - Ubinp  # Положительный двойной слой
@@ -268,7 +268,7 @@ class IndepStateFunction(object):
         KQAkk = np.array([KInAkk * TInAkk, KBAkk * cKbAkk * Tokr], dtype=np.double) * TBAkk / NonEqSystemQBase.GetTbase()
 
         # Выводим результат
-        return (I, Tokr,
+        return (ICur, Tokr,
                 heatStreambEnPow,
                 JSq, JST, HSqT, HSTT,
                 rbinp, rbinn, rm,

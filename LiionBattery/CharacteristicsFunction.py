@@ -2,8 +2,7 @@ import numpy as np
 
 from MathProtEnergyProcBase.IndexFunctions import GetIndex, GetIndexes
 
-from .AttributesNames import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames, USystemParametersNames, otherSystemParametersNames, processCoordinatesNames
-from .StationFunctions import funCbin
+from .AttributesNames import stateCoordinatesNames, reducedTemperaturesEnergyPowersNames, otherSystemParametersNames, processCoordinatesNames
 
 
 # Индексы координат состояния

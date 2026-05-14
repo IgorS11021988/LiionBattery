@@ -3,3 +3,4 @@ from .InputOutput import InputArrayCreate, OutputValues
 from .Structure import *
 from .fU import fU
 from .AttributesNames import *
+from .IntegDynamic import integDynamic

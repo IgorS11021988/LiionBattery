@@ -171,13 +171,15 @@ def OutputValues(dyns, index,
     oneTimeValueGraphics = [{"values": Ukl,  # Величины в моменты времени
                              "graphName": "Напряжение на клеммах",  # Имя полотна
                              "yAxesName": "Напряжение, В",  # Имя оси ординат
-                             "graphFileBaseName": "AkkVoltage"  # Имя файла графика
+                             "graphFileBaseName": "AkkVoltage",  # Имя файла графика
+                             "color": (0, 0, 0)  # Цвет в RGB-шкале
                              },
 
                             {"values": qDegPosEl,  # Величины в моменты времени
                              "graphName": "Зарядовое число молей разрушенного положительного электрода",  # Имя полотна
                              "yAxesName": "Зарядовое число молей",  # Имя оси ординат
-                             "graphFileBaseName": "AkkDegPosEl"  # Имя файла графика
+                             "graphFileBaseName": "AkkDegPosEl",  # Имя файла графика
+                             "color": (0, 0, 0)  # Цвет в RGB-шкале
                              }]
 
     # Группы графиков на полотне
@@ -185,26 +187,29 @@ def OutputValues(dyns, index,
                             "listValuesNames": ["Содержимое", "Корпус"],  # Список имен величин (в моменты времени)
                             "graphName": "Температура в литий-ионном аккумуляторе",  # Имя полотна
                             "yAxesName": "Температура, град С",  # Имя оси
-                            "graphFileBaseName": "AkkTemperatures"  # Имя файла графика
+                            "graphFileBaseName": "AkkTemperatures",  # Имя файла графика
+                            "color": [(0, 0, 1), (0, 0, 0)]  # Цвет в RGB-шкале
                             },
 
-                           {"listValues": [Ubinn, Ubinp, Um],  # Список величин в моменты времени
-                            "listValuesNames": ["Отрицательный двойной слой",
-                                                "Положительный двойной слой",
+                           {"listValues": [Ubinp, Ubinn, Um],  # Список величин в моменты времени
+                            "listValuesNames": ["Положительный двойной слой",
+                                                "Отрицательный двойной слой",
                                                 "Мембрана"],  # Список имен величин (в моменты времени)
                             "graphName": "Напряжения в литий-ионном аккумуляторе",  # Имя полотна
                             "yAxesName": "Напряжение, В",  # Имя оси
-                            "graphFileBaseName": "InAkkVoltage"  # Имя файла графика
+                            "graphFileBaseName": "InAkkVoltage",  # Имя файла графика
+                            "color": [(1, 0, 0), (0, 0, 1), (0, 1, 0)]  # Цвет в RGB-шкале
                             },
 
-                           {"listValues": [Ibinn, Ibinp, Im, Icur],  # Список величин в моменты времени
-                            "listValuesNames": ["Отрицательный двойной слой",
-                                                "Положительный двойной слой",
+                           {"listValues": [Ibinp, Ibinn, Im, Icur],  # Список величин в моменты времени
+                            "listValuesNames": ["Положительный двойной слой",
+                                                "Отрицательный двойной слой",
                                                 "Мембрана",
                                                 "Ток во внешней цепи"],  # Список имен величин (в моменты времени)
                             "graphName": "Токи в литийионном аккумуляторе",  # Имя полотна
                             "yAxesName": "Ток, Cnom",  # Имя оси
-                            "graphFileBaseName": "AkkCurrents"  # Имя файла графика
+                            "graphFileBaseName": "AkkCurrents",  # Имя файла графика
+                            "color": [(1, 0, 0), (0, 0, 1), (0, 1, 0), (0.21, 0.51, 0)]  # Цвет в RGB-шкале
                             },
 
                            {"listValues": [qMatElp, qMatDegElp],  # Список величин в моменты времени
@@ -212,7 +217,8 @@ def OutputValues(dyns, index,
                                                 "Деградированный материал"],  # Список имен величин (в моменты времени)
                             "graphName": "Материалы положительного электрода",  # Имя полотна
                             "yAxesName": "Зарядовое число молей",  # Имя оси
-                            "graphFileBaseName": "AkkDegPositiveElectrode"  # Имя файла графика
+                            "graphFileBaseName": "AkkDegPositiveElectrode",  # Имя файла графика
+                            "color": [(0, 0, 1), (0, 0, 0)]  # Цвет в RGB-шкале
                             },
 
                            {"listValues": [qMatEln, qMatDegEln],  # Список величин в моменты времени
@@ -220,7 +226,8 @@ def OutputValues(dyns, index,
                                                 "Деградированный материал"],  # Список имен величин (в моменты времени)
                             "graphName": "Материалы отрицательного электрода",  # Имя полотна
                             "yAxesName": "Зарядовое число молей",  # Имя оси
-                            "graphFileBaseName": "AkkDegNegativeElectrode"  # Имя файла графика
+                            "graphFileBaseName": "AkkDegNegativeElectrode",  # Имя файла графика
+                            "color": [(0, 0, 1), (0, 0, 0)]  # Цвет в RGB-шкале
                             }]
 
     # Сохраняем динамику в .csv файл и отображаем графики

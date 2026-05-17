@@ -4,3 +4,4 @@ from .Structure import *
 from .fU import fU
 from .AttributesNames import *
 from .IntegDynamic import integDynamic
+from .PostModeling import PostModeling

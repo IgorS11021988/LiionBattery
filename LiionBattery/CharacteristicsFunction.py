@@ -95,3 +95,61 @@ def CharacteristicsFunction(t,  # Моменты времени
             Ibinp * 3600 / Cnom, Im * 3600 / Cnom, Ibinn * 3600 / Cnom, Icur * 3600 / Cnom,
             Tokr, qMatElp / qMatAllp, qMatEln / qMatAlln,
             qMatDegElp / qMatAllp, qMatDegEln / qMatAlln, qDegPosEl / qMatAllp)
+
+
+# Функция состояния для литий-ионного аккумулятора
+def CharacteristicsFunctionOptimize(t,  # Моменты времени
+                                    stateCoordinates,  # Координаты состояния
+                                    reducedTemp,  # Приведенные температуры
+                                    USystemParameters,  # U-параметры системы
+                                    otherSystemParameters,  # Прочие параметры системы
+                                    nEqSysQ  # Указатель на функцию системы
+                                    ):
+    # Рассчитываем аттрибуты системы
+    def GetElAttr(ind):
+        # Рассчитываем аттрибуты
+        nEqSysQ.CountSystem(stateCoordinates[ind],  # Координаты состояния
+                            reducedTemp[ind],  # Приведенные температуры энергетических степеней свободы
+                            np.hstack([USystemParameters[ind], otherSystemParameters])  # Параметры системы
+                            )
+
+        # Получаем напряжения двойных слоев
+        Ubinp = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetUbinp()  # Положительный двойной слой
+        Ubinn = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetUbinn()  # Отрицательный двойной слой
+
+        # Получаем напряжение мембраны
+        Um = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetUm()
+
+        # Получаем напряжение внутри аккумулятора
+        Uin = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetUin()
+
+        # Получаем ток во внешней цепи
+        Icur = nEqSysQ.GetStateFunction().GetIndepStateFunction().GetIcur()
+
+        # Выводим результат
+        return (Icur, Ubinp, Um, Ubinn, Uin)
+    inds = np.arange(t.shape[0])  # Массив индексов
+    GetAttrs = np.vectorize(GetElAttr)
+    (Icur, Ubinp, Um, Ubinn, Uin) = GetAttrs(inds)
+
+    # Получаем координаты состояния
+    q = stateCoordinates[:, qInd]  # Перенесенный через внешнюю цепь электричекий заряд
+
+    # Температура аккумулятора
+    TBAkk = reducedTemp[:, TBAkkInd] - 273.15
+
+    # Получаем параметры
+    [Cnom,
+     Rkl,
+     Tokr,
+     qMatAllp,
+     qMatAlln
+     ] = otherSystemParameters[otherSystemParametersInd]
+    Tokr = np.full_like(Icur, Tokr - 273.15, dtype=np.double)  # Массив температур окружающей среды
+
+    # Напряжение на клеммах (окончательно)
+    Ukl = Uin - Icur * Rkl
+
+    # Вывод результата
+    return (t.reshape(-1,), Ukl, TBAkk,
+            Icur * 3600 / Cnom, Tokr)

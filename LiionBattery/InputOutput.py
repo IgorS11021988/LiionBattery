@@ -243,3 +243,22 @@ def OutputValues(dyns, index,
 
                                index=index  # Индекс динамики
                                )
+
+
+# Обработка результатов моделирования динамик
+def OutputValuesOptimize(dyns, index,
+                         saveDynamicFun):
+    # Получаем величины из кортежа
+    (t, Ukl, TBAkk,
+     Icur, Tokr) = dyns
+
+    # Заголовки и динамики
+    dynamicsHeaders = {"Time": t,
+                       "Ukl": Ukl,
+                       "TBAkk": TBAkk,
+                       "Icur": Icur,
+                       "Tokr": Tokr
+                       }
+
+    # Сохраняем динамику
+    saveDynamicFun.SaveDynamic(dynamicsHeaders, index)

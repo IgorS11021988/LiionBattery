@@ -3,18 +3,15 @@ import os
 
 def PostModeling(allPars,  # Параметры моделирования с индексами
                  saveDynamicFun,  # Функтор сохранения динамики
-                 PathResult,  # Путь к результатам
-
-                 # Файл CSV
-                 sep,  # Сепаратор CSV
-                 dec  # Десятичный разделитель
+                 PathResult  # Путь к результатам
                  ):
     # Формируем имя файла параметров
-    ParametersFileName = os.path.join(PathResult, "Parameters.csv")
+    ParametersFileName = os.path.join(PathResult[0], "Parameters.csv")
 
     # Сохраняем параметры
     allPars.to_csv(ParametersFileName,
-                   sep=sep, decimal=dec,
+                   sep=PathResult[1],
+                   decimal=PathResult[2],
                    index=False)
 
     # Возвращаем отсутствие ошибки

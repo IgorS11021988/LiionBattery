@@ -85,6 +85,9 @@ class IndepStateFunction(object):
          bDeltaTtoOkr,  # Граничная разность температур, при которой ухудшается теплообмен
          cDeltaTtoOkr,  # Коэффициент разности температур, при которой ухудшается теплообмен
          rNuLi0p,  # Относительное число молей лития в положительном электроде
+         rQEl,  # Доля выделяющейся джоулевой теплоты на электродах, сообщаемая внутреннему содержимому аккумулятора
+         eQIn,  # Интенсивность подвода дополнительной внешней теплоты к внутреннему содержимому аккумулятора
+         eQB,  # Интенсивность подвода дополнительной внешней теплоты к корпусу аккумулятора
 
          betaRI2p,
          betaRI2n,
@@ -180,7 +183,9 @@ class IndepStateFunction(object):
         self.__Icur = ICur
 
         # Внешний поток теплоты на корпус аккумулятора
-        heatStreambEnPow = Rkl * np.power(ICur, 2)
+        heatStreamEnPow = Rkl * np.power(ICur, 2)
+        heatStreamInEnPow = rQEl * heatStreamEnPow + eQIn
+        heatStreamBEnPow = (1 - rQEl) * heatStreamEnPow + eQB
 
         # Определяем падения напряжения на двойных слоях
         dissUbinp = Ebinp - Ubinp  # Положительный двойной слой
@@ -269,7 +274,8 @@ class IndepStateFunction(object):
 
         # Выводим результат
         return (ICur, Tokr,
-                heatStreambEnPow,
+                heatStreamInEnPow,
+                heatStreamBEnPow,
                 JSq, JST, HSqT, HSTT,
                 rbinp, rbinn, rm,
                 aActp, aActn,

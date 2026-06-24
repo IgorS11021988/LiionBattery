@@ -17,7 +17,7 @@ def StructureFunction():
     heatTransfersOutputEnergyPowersNames = ["EnPowInAkk", "EnPowBAkk"]  # Имена энергетических степеней свободы, с которых уходит теплота
     heatTransfersInputEnergyPowersNames = ["EnPowBAkk", "EnPowOkr"]  # Имена энергетических степеней свободы, на которые приходит теплота
     stateCoordinatesStreamsNames = ["qbinp", "qm", "qbinn", "q"]  # Имена координат состояния, изменяемых в результате внешних потоков
-    heatEnergyPowersStreamsNames = ["EnPowBAkk"]  # Имена потоков теплоты на энергетические степени свободы
+    heatEnergyPowersStreamsNames = ["EnPowInAkk", "EnPowBAkk"]  # Имена потоков теплоты на энергетические степени свободы
     stateCoordinatesVarBalanceNames = []  # Имена переменных коэффициентов матрицы баланса по координатам состояния
     processCoordinatesVarBalanceNames = []  # Имена переменных коэффициентов матрицы баланса по координатам процессов
     energyPowersVarTemperatureNames = ["EnPowInAkk", "EnPowBAkk", "EnPowOkr"]  # Имена переменных температур энергетических степеней свободы
@@ -40,7 +40,7 @@ def StructureFunction():
     varKineticHeatHeatNames = ["QInBAkk", "QBAkkExp"]  # Имена сопряженностей между собой перенесенных теплот
     varKineticHeatHeatAffNames = ["QInBAkk", "QBAkkExp"]  # Имена сопряженностей между собой термодинамических сил по переносу теплот
     stateCoordinatesVarStreamsNames = ["qbinp", "qm", "qbinn", "q"]  # Имена переменных внешних потоков
-    heatEnergyPowersVarStreamsNames = ["EnPowBAkk"]  # Имена переменных внешних потоков теплоты
+    heatEnergyPowersVarStreamsNames = ["EnPowInAkk", "EnPowBAkk"]  # Имена переменных внешних потоков теплоты
 
     # Потенциалы взаимодействия в топливном элементе и камерах
     potentialInterAkk = IntPotentialsOne(stateCoordinatesNames,  # Имена координат состояния
@@ -94,9 +94,9 @@ def StructureFunction():
                      reducedTemp,
                      systemParameters):
             # Получаем независимые составляющие свойств веществ и процессов
-            (I, Tokr, heatStreambEnPow,
-             JSq, JST, HSqT, HSTT,
-             rbinp, rbinn, rm,
+            (I, Tokr, heatStreamInEnPow,
+             heatStreamBEnPow, JSq, JST,
+             HSqT, HSTT, rbinp, rbinn, rm,
              aActp, aActn, kActp, kActn,
              KDegEl, KQAkk) = self.__indepStateFunction(stateCoordinates,
                                                         reducedTemp,
@@ -109,7 +109,8 @@ def StructureFunction():
             stateCoordinatesStreams = np.array([-I, -I, -I, I], dtype=np.double)
 
             # Внешние потоки теплоты
-            heatEnergyPowersStreams = np.array([heatStreambEnPow], dtype=np.double)
+            heatEnergyPowersStreams = np.array([heatStreamInEnPow,
+                                                heatStreamBEnPow], dtype=np.double)
 
             # Выводим температуры
             energyPowerTemperatures = np.hstack([reducedTemp, [Tokr]])
